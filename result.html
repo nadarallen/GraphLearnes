@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quiz Result - GraphEdu</title>
+    <link rel="stylesheet" href="result.css" />
+    <style>
+      /* ---------------- Score Circle Styles ---------------- */
+      .score-circle {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        margin: 40px auto;
+      }
+
+      .score-circle svg {
+        transform: rotate(-90deg);
+      }
+
+      .score-circle circle {
+        fill: none;
+        stroke-width: 12;
+        stroke-linecap: round;
+      }
+
+      .score-circle .bg {
+        /* Adjusted background to a neutral color, or you can keep red */
+        stroke: #dc3545;
+      }
+
+      .score-circle .progress {
+        stroke: #28a745; /* Progress color (green) */
+        stroke-dasharray: 339.292; /* circumference = 2 * PI * 54 */
+        stroke-dashoffset: 339.292;
+        transition: stroke-dashoffset 1s ease;
+      }
+
+      .score-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 24px;
+        font-weight: bold;
+      }
+
+      /* ---------------- Review Section ---------------- */
+      .review-container {
+        margin-top: 30px;
+        padding: 15px;
+        border-top: 2px solid #ddd;
+      }
+
+      .review-item {
+        margin-bottom: 20px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background: #fafafa;
+      }
+
+      .review-item.correct {
+        border-left: 6px solid #28a745;
+      }
+
+      /* The 'incorrect' class will now apply to Wrong and Skipped answers */
+      .review-item.wrong,
+      .review-item.skipped {
+        border-left: 6px solid #dc3545;
+      }
+
+      .review-question {
+        font-weight: bold;
+        margin-bottom: 8px;
+      }
+
+      .review-answer {
+        margin: 4px 0;
+      }
+
+      .review-answer span {
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="result-container">
+      <div class="result-header">
+        <h1>Quiz Result</h1>
+        <p id="quiz-topic">Data Structures</p>
+      </div>
+
+      <div class="result-summary">
+        <div class="score-circle">
+          <svg width="120" height="120">
+            <circle class="bg" cx="60" cy="60" r="54" />
+            <circle class="progress" cx="60" cy="60" r="54" />
+          </svg>
+          <div class="score-text" id="score-percent">0%</div>
+        </div>
+      </div>
+
+      <div class="result-details">
+        <div class="detail-item">
+          <span class="label">Total Questions</span>
+          <span class="value" id="total-questions">0</span>
+        </div>
+        <div class="detail-item correct">
+          <span class="label">Correct Answers</span>
+          <span class="value" id="correct-answers">0</span>
+        </div>
+        <div class="detail-item incorrect">
+          <span class="label">Incorrect Answers</span>
+          <span class="value" id="incorrect-answers">0</span>
+        </div>
+      </div>
+
+      <div class="review-container" id="review-container">
+        <h2>Answer Review</h2>
+      </div>
+
+      <div class="result-footer">
+        <a href="home.html" class="home-btn">Back to Home</a>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const urlParams = new URLSearchParams(window.location.search);
+
+        // ---------------- Main Summary ----------------
+        const topic = urlParams.get("topic") || "N/A";
+        const total = parseInt(urlParams.get("total") || 0);
+
+        document.getElementById("quiz-topic").textContent = topic;
+        document.getElementById("total-questions").textContent = total;
+
+        let calculatedCorrect = 0;
+        let calculatedIncorrect = 0;
+        let calculatedScore = 0; // Final score which is only correct answers
+
+        // ---------------- DETAIL REVIEW & CALCULATION ----------------
+        const resultsJSON = urlParams.get("results");
+        if (resultsJSON) {
+          try {
+            const results = JSON.parse(decodeURIComponent(resultsJSON));
+            const reviewContainer = document.getElementById("review-container");
+
+            results.forEach((r) => {
+              const status = r.status;
+              const reviewClass = status === "Correct" ? "correct" : "wrong"; // Use 'wrong' class for all non-correct states
+
+              if (status === "Correct") {
+                calculatedCorrect++;
+                calculatedScore++;
+              } else {
+                // Incorrect includes "Wrong" (answered incorrectly) and "Skipped" (not answered)
+                calculatedIncorrect++;
+              }
+
+              const div = document.createElement("div");
+              div.classList.add("review-item");
+              div.classList.add(reviewClass);
+
+              div.innerHTML = `
+                <div class="review-question">Q${r.qNo}. ${r.question}</div>
+                <div class="review-answer"><span>Your Answer:</span> ${
+                  r.userAns || "Not Answered/Marked for Review"
+                }</div>
+                <div class="review-answer"><span>Correct Answer:</span> ${
+                  r.correctAns
+                }</div>
+                <div class="review-answer"><span>Status:</span> ${
+                  r.status
+                }</div>
+              `;
+              reviewContainer.appendChild(div);
+            });
+
+            // Update the summary details
+            document.getElementById("correct-answers").textContent =
+              calculatedCorrect;
+            document.getElementById("incorrect-answers").textContent =
+              calculatedIncorrect;
+
+            // ---------------- Score & Circular Progress ----------------
+            const scorePercent =
+              total > 0 ? Math.round((calculatedScore / total) * 100) : 0;
+            document.getElementById(
+              "score-percent"
+            ).textContent = `${scorePercent}%`;
+
+            const progressCircle = document.querySelector(
+              ".score-circle .progress"
+            );
+            const radius = 54;
+            const circumference = 2 * Math.PI * radius;
+
+            progressCircle.style.strokeDasharray = circumference;
+            progressCircle.style.strokeDashoffset = circumference;
+
+            // Animate fill
+            setTimeout(() => {
+              const offset =
+                circumference - (scorePercent / 100) * circumference;
+              progressCircle.style.strokeDashoffset = offset;
+            }, 200);
+          } catch (e) {
+            console.error("Failed to parse results JSON", e);
+            document.getElementById("review-container").innerHTML =
+              "<p>Error loading detailed results.</p>";
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

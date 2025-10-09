@@ -1,0 +1,226 @@
+/* --- General Quiz Page Styles --- */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+  background-color: #eef5f9;
+  margin: 0;
+  color: #333;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+.quiz-container {
+  width: 100%;
+  max-width: 1400px;
+  height: 95vh;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+/* --- Header --- */
+.quiz-header {
+  background-color: #007bff;
+  color: white;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+.quiz-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+.header-details {
+  font-size: 1rem;
+}
+
+/* --- Quiz Body Layout --- */
+.quiz-body {
+  display: flex;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+/* --- Main Question Area --- */
+.question-main {
+  flex-grow: 1;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+}
+.question-header {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #007bff;
+  margin-bottom: 1.5rem;
+}
+.question-content {
+  flex-grow: 1;
+}
+/* This paragraph style applies to non-code question text */
+.question-content p {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+/* --- Code Block Styling (MODIFIED/ADDED) --- */
+/* This targets the <div> injected by JavaScript for code questions */
+.code-box {
+  background-color: #f4f4f4; /* Light gray box */
+  padding: 15px;
+  border-radius: 6px;
+  margin-top: 10px;
+  margin-bottom: 20px;
+  font-family: "Courier New", Courier, monospace; /* Monospaced font */
+  white-space: pre-wrap; /* Respect line breaks and spacing */
+  overflow-x: auto;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  border: 1px solid #ddd;
+}
+/* --- End Code Block Styling --- */
+
+.options .option {
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+}
+.options input[type="radio"] {
+  margin-right: 1rem;
+  transform: scale(1.2);
+}
+.options label {
+  cursor: pointer;
+}
+
+/* --- Question Navigation --- */
+.question-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1.5rem;
+  border-top: 1px solid #eee;
+}
+.nav-btn {
+  padding: 0.7rem 1.5rem;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  background-color: #6c757d;
+  color: white;
+}
+.nav-btn.clear {
+  background-color: #ffc107;
+  color: #333;
+}
+.nav-btn.next {
+  background-color: #28a745;
+}
+.nav-btn.prev {
+  background-color: #17a2b8;
+}
+.nav-btn:hover {
+  opacity: 0.9;
+}
+.nav-right {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* --- Side Palette --- */
+.question-palette {
+  width: 350px;
+  background-color: #f8f9fa;
+  border-left: 1px solid #dee2e6;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+.palette-header {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+.palette-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(45px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.palette-btn {
+  width: 45px;
+  height: 45px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: white;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+.palette-btn:hover {
+  background-color: #e2e6ea;
+}
+.palette-btn.current {
+  border: 2px solid #007bff;
+}
+.palette-btn.answered {
+  background-color: #28a745;
+  color: white;
+}
+.palette-btn.not-answered {
+  background-color: #dc3545;
+  color: white;
+}
+.palette-btn.marked {
+  background-color: #6f42c1;
+  color: white;
+}
+.palette-legend {
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+.legend-box {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  margin-right: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+.submit-btn {
+  width: 100%;
+  padding: 0.8rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: auto;
+}
+.submit-btn:hover {
+  background-color: #0056b3;
+}
+.btl-level-class {
+  color: #000000;
+  margin-left: 700px;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 20px;
+}

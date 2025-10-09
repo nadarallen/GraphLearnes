@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GraphEdu Quiz</title>
+    <link rel="stylesheet" href="quiz.css" />
+    <!-- NOTE: quiz.css is assumed to be available in the environment -->
+    <style>
+      /* --- Modal/Popup Styles (For BTL Level Feedback) --- */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.4);
+        display: none; /* Hidden by default */
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+      .modal-content {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        max-width: 400px;
+        transform: scale(0.9);
+        transition: transform 0.3s ease;
+      }
+      .modal-overlay.visible {
+        display: flex;
+        opacity: 1;
+      }
+      .modal-overlay.visible .modal-content {
+        transform: scale(1);
+      }
+      .modal-content h3 {
+        margin-top: 0;
+        font-size: 1.8rem;
+        font-weight: 700;
+      }
+
+      /* --- Animation Container --- */
+      .graph-animation {
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        width: 100%;
+        height: 80px;
+        margin-bottom: 1rem;
+        gap: 8px;
+      }
+      .graph-bar {
+        width: 15px;
+        height: 10px;
+        border-radius: 3px 3px 0 0;
+      }
+
+      /* --- Animation Keyframes --- */
+      @keyframes graphUp {
+        0% {
+          height: 10px;
+          opacity: 0.5;
+        }
+        100% {
+          height: var(--final-height);
+          opacity: 1;
+        }
+      }
+      @keyframes graphDown {
+        0% {
+          height: 70px;
+          opacity: 0.5;
+        }
+        100% {
+          height: var(--final-height);
+          opacity: 1;
+        }
+      }
+
+      /* --- Up Level Styling --- */
+      .modal-up .graph-bar {
+        background-color: #28a745; /* Green */
+        animation: graphUp 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+      }
+      .modal-up .graph-bar:nth-child(1) {
+        --final-height: 40px;
+        animation-delay: 0s;
+      }
+      .modal-up .graph-bar:nth-child(2) {
+        --final-height: 60px;
+        animation-delay: 0.1s;
+      }
+      .modal-up .graph-bar:nth-child(3) {
+        --final-height: 80px;
+        animation-delay: 0.2s;
+      }
+
+      /* --- Down Level Styling --- */
+      .modal-down .graph-bar {
+        background-color: #dc3545; /* Red */
+        animation: graphDown 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+      }
+      .modal-down .graph-bar:nth-child(1) {
+        --final-height: 80px;
+        animation-delay: 0s;
+      }
+      .modal-down .graph-bar:nth-child(2) {
+        --final-height: 60px;
+        animation-delay: 0.1s;
+      }
+      .modal-down .graph-bar:nth-child(3) {
+        --final-height: 40px;
+        animation-delay: 0.2s;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- BTL Feedback Modal -->
+    <div id="btl-feedback-modal" class="modal-overlay">
+      <div class="modal-content">
+        <!-- New animation structure -->
+        <div id="modal-icon" class="graph-animation">
+          <div class="graph-bar"></div>
+          <div class="graph-bar"></div>
+          <div class="graph-bar"></div>
+        </div>
+        <!-- End animation structure -->
+        <h3 id="modal-title"></h3>
+        <p id="modal-message"></p>
+      </div>
+    </div>
+    <!-- End Modal -->
+
+    <div class="quiz-container">
+      <header class="quiz-header">
+        <h1 id="quiz-title">Quiz Loading...</h1>
+        <div class="header-details">
+          <span><strong>Time Left:</strong> <span id="timer">29:59</span></span>
+        </div>
+      </header>
+
+      <div class="quiz-body">
+        <main class="question-main">
+          <div class="question-header">
+            <span id="q-num">Question No. 1</span>
+            <!-- BTL level display remains, but streak info is removed -->
+            <span id="btl-level" class="btl-level-class"> (Level 1) </span>
+          </div>
+          <div class="question-content">
+            <!-- Modified to use a placeholder for question text injection -->
+            <div id="q-text-wrapper"></div>
+            <div class="options" id="options-container"></div>
+          </div>
+          <div class="question-nav">
+            <button class="nav-btn mark-review">Mark for Review & Next</button>
+            <button class="nav-btn clear">Clear Response</button>
+            <div class="nav-right">
+              <!-- Previous button is complex in adaptive tests, simplified here to only show if there is history -->
+              <button class="nav-btn prev hidden">Previous</button>
+              <button class="nav-btn next">Save & Next</button>
+            </div>
+          </div>
+        </main>
+
+        <aside class="question-palette">
+          <div class="palette-header">Question Palette</div>
+          <div class="palette-grid"></div>
+          <div class="palette-legend">
+            <div><span class="legend-box answered"></span> Answered</div>
+            <div>
+              <span class="legend-box not-answered"></span> Not Answered
+            </div>
+            <div><span class="legend-box marked"></span> Marked for Review</div>
+            <div><span class="legend-box not-visited"></span> Not Visited</div>
+          </div>
+          <button class="submit-btn">Submit Quiz</button>
+        </aside>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // Topic
+        const urlParams = new URLSearchParams(window.location.search);
+        const topic = urlParams.get("topic") || "Programming Concepts";
+        document.getElementById("quiz-title").textContent = `${topic} Quiz`;
+
+        // ---------------- ADAPTIVE QUIZ SETUP ----------------
+        // Adaptive settings
+        const CORRECT_STREAK_TO_INCREASE = 2;
+        const INCORRECT_STREAK_TO_DECREASE = 2;
+        const MAX_QUESTIONS_TO_ASK = 20; // Fixed total number of slots in the quiz
+
+        // State tracking
+        let currentQuestionId = null; // The ID of the question currently displayed
+        let askedQuestionsCount = 0;
+        let correctStreak = 0;
+        let incorrectStreak = 0;
+        let currentBtlLevel = 1; // Start at Level 1
+
+        // History of questions asked, ordered by appearance, storing the Q-ID
+        let questionHistory = [];
+
+        // ---------------- FULL QUESTIONS DATASET ----------------
+        const questionPool = [
+          // Basic Programming (BTL 1)
+          {
+            id: 1,
+            text: 'Which of the following is the correct syntax to print "Hello World" in C?',
+            options: [
+              'System.out.println("Hello World");',
+              'printf("Hello World");',
+              'cout << "Hello World";',
+              'echo "Hello World";',
+            ],
+            correct: 'printf("Hello World");',
+            btl_level: 1,
+          },
+          {
+            id: 2,
+            text: "Which of these is not a valid C++ access specifier?",
+            options: ["public", "private", "protected", "friendly"],
+            correct: "friendly",
+            btl_level: 1,
+          },
+          {
+            id: 3,
+            text: "In C++, the default return type of the main() function is:",
+            options: ["void", "int", "float", "char"],
+            correct: "int",
+            btl_level: 1,
+          },
+          {
+            id: 4,
+            text: "Which symbol is used for single-line comments in C++ and Java?",
+            options: ["/* */", "//", "#", "<!-- -->"],
+            correct: "//",
+            btl_level: 1,
+          },
+          {
+            id: 5,
+            text: "Which of these statements is true about Java?",
+            options: [
+              "Java code can run without compilation",
+              "Java is platform-independent",
+              "Java does not support OOP",
+              "Java does not have loops",
+            ],
+            correct: "Java is platform-independent",
+            btl_level: 1,
+          },
+          {
+            id: 6,
+            text: "Which keyword is used to define a variable in Java?",
+            options: ["let", "var", "int", "define"],
+            correct: "int",
+            btl_level: 1,
+          },
+          {
+            id: 7,
+            text: "Which of the following is a valid C data type?",
+            options: ["number", "float", "decimal", "real"],
+            correct: "float",
+            btl_level: 1,
+          },
+          {
+            id: 8,
+            text: "What is the size of int data type in most 32-bit C/C++ compilers?",
+            options: ["1 byte", "2 bytes", "4 bytes", "8 bytes"],
+            correct: "4 bytes",
+            btl_level: 1,
+          },
+          {
+            id: 9,
+            text: "Which of the following is a floating-point data type?",
+            options: ["int", "char", "double", "boolean"],
+            correct: "double",
+            btl_level: 1,
+          },
+          {
+            id: 10,
+            text: "Which data type is used to store a single character?",
+            options: ["int", "char", "string", "float"],
+            correct: "char",
+            btl_level: 1,
+          },
+          {
+            id: 11,
+            text: "What is the default value of a static int variable in C++?",
+            options: ["0", "Garbage", "1", "Undefined"],
+            correct: "0",
+            btl_level: 1,
+          },
+          {
+            id: 12,
+            text: "Which of the following is a boolean value in C++?",
+            options: ["1", "true", '"true"', "yes"],
+            correct: "true",
+            btl_level: 1,
+          },
+          {
+            id: 13,
+            text: "Which of these types is used for storing large integers in Java?",
+            options: ["int", "long", "short", "byte"],
+            correct: "long",
+            btl_level: 1,
+          },
+          {
+            id: 14,
+            text: "An array in C starts with index number:",
+            options: ["0", "1", "-1", "Depends on compiler"],
+            correct: "0",
+            btl_level: 1,
+          },
+          {
+            id: 15,
+            text: "How many elements does int arr[10]; hold?",
+            options: ["9", "10", "11", "Undefined"],
+            correct: "10",
+            btl_level: 1,
+          },
+          {
+            id: 16,
+            text: "In Java, arrays are:",
+            options: ["Primitive types", "Objects", "Functions", "Loops"],
+            correct: "Objects",
+            btl_level: 1,
+          },
+          {
+            id: 17,
+            text: "Which of the following correctly declares an integer array of size 5 in C++?",
+            options: [
+              "int arr[5];",
+              "int arr();",
+              "int arr = new int[5];",
+              "array<int> arr[5];",
+            ],
+            correct: "int arr[5];",
+            btl_level: 1,
+          },
+          {
+            id: 18,
+            text: "How can you access the third element of an array arr?",
+            options: ["arr[2]", "arr[3]", "arr(3)", "arr.3"],
+            correct: "arr[2]",
+            btl_level: 1,
+          },
+          {
+            id: 19,
+            text: "Which of the following is not allowed in arrays?",
+            options: [
+              "Accessing elements",
+              "Storing different data types",
+              "Looping through elements",
+              "Initializing at declaration",
+            ],
+            correct: "Storing different data types",
+            btl_level: 1,
+          },
+          {
+            id: 20,
+            text: "Which of the following is multidimensional array syntax in C++?",
+            options: [
+              "int arr[3][4];",
+              "int arr[3,4];",
+              "int arr(3,4);",
+              "array arr[3][4];",
+            ],
+            correct: "int arr[3][4];",
+            btl_level: 1,
+          },
+          {
+            id: 21,
+            text: "Which of the following loops is guaranteed to run at least once?",
+            options: [
+              "for loop",
+              "while loop",
+              "do-while loop",
+              "None of the above",
+            ],
+            correct: "do-while loop",
+            btl_level: 1,
+          },
+          {
+            id: 22,
+            text: "How do you skip the current iteration in a loop in C++/Java?",
+            options: ["skip;", "continue;", "break;", "pass;"],
+            correct: "continue;",
+            btl_level: 1,
+          },
+          {
+            id: 23,
+            text: "How do you terminate a loop prematurely in C++/Java?",
+            options: ["stop;", "end;", "break;", "exit;"],
+            correct: "break;",
+            btl_level: 1,
+          },
+          {
+            id: 24,
+            text: "What is the output of:<code-block>int i = 0;  while(i<3){  \n    System.out.print(i);  \n    i++;  \n}  </code-block>",
+            options: ["0 1 2", "1 2 3", "0 1 2 3", "1 2"],
+            correct: "0 1 2",
+            btl_level: 1,
+          },
+          {
+            id: 25,
+            text: "In a for loop, which part controls the termination condition?",
+            options: [
+              "Initialization",
+              "Condition",
+              "Increment/Decrement",
+              "Body",
+            ],
+            correct: "Condition",
+            btl_level: 1,
+          },
+          {
+            id: 26,
+            text: "In C, the keyword used to return a value from a function is:",
+            options: ["break", "end", "return", "stop"],
+            correct: "return",
+            btl_level: 1,
+          },
+          {
+            id: 27,
+            text: "What is the correct way to define a function in C++?",
+            options: [
+              "int sum(a, b){ return a+b; }",
+              "int sum(int a, int b){ return a+b; }",
+              "function sum(int a, int b) { return a+b; }",
+              "sum(int a, int b): return a+b;",
+            ],
+            correct: "int sum(int a, int b){ return a+b; }",
+            btl_level: 1,
+          },
+          {
+            id: 28,
+            text: "Functions can return:",
+            options: [
+              "Only integers",
+              "Only strings",
+              "Any data type",
+              "Only void",
+            ],
+            correct: "Any data type",
+            btl_level: 1,
+          },
+          {
+            id: 29,
+            text: "Which keyword is used to return a value from a function?",
+            options: ["exit", "return", "break", "yield"],
+            correct: "return",
+            btl_level: 1,
+          },
+          {
+            id: 30,
+            text: "Which loop can be used in nested structures?",
+            options: [
+              "Only for loops",
+              "Only while loops",
+              "Only do-while loops",
+              "Any loop",
+            ],
+            correct: "Any loop",
+            btl_level: 1,
+          },
+          {
+            id: 31,
+            text: "In C, which statement is used to skip the current iteration of a loop?",
+            options: ["break;", "continue;", "return;", "skip;"],
+            correct: "continue;",
+            btl_level: 1,
+          },
+          {
+            id: 32,
+            text: "If an array arr[10] is declared, what is the valid index range?",
+            options: ["1 to 10", "0 to 9", "-1 to 9", "0 to 10"],
+            correct: "0 to 9",
+            btl_level: 1,
+          },
+          // New Code Questions (BTL 1)
+          {
+            id: 51,
+            text: "What is the output of the following code in C++?<code-block>int arr[3] = {1, 2, 3};  \ncout << arr[1];</code-block>",
+            options: ["1", "2", "3", "Error"],
+            correct: "2",
+            btl_level: 1,
+          },
+          {
+            id: 52,
+            text: 'What is the output of:<code-block>void printHello(){  \n    cout << "Hello";  \n}  \nint main(){  \n    printHello();  \n}</code-block>',
+            options: ["main", "Hello", "printHello", "Error"],
+            correct: "Hello",
+            btl_level: 1,
+          },
+
+          // BTL Level 2: Understanding
+          {
+            id: 33,
+            text: "Why do we use data types in programming?",
+            options: [
+              "To reduce memory",
+              "To define the kind of data a variable can store",
+              "To increase speed",
+              "To avoid loops",
+            ],
+            correct: "To define the kind of data a variable can store",
+            btl_level: 2,
+          },
+          {
+            id: 34,
+            text: "What happens if you try to store a float value in an int variable?",
+            options: [
+              "Error at compile time",
+              "Value is rounded automatically",
+              "Fractional part is truncated",
+              "Program crashes",
+            ],
+            correct: "Fractional part is truncated",
+            btl_level: 2,
+          },
+          {
+            id: 35,
+            text: 'What is the output of System.out.println(5 + "5"); in Java?',
+            options: ["10", '"55"', "5", "Error"],
+            correct: '"55"',
+            btl_level: 2,
+          },
+          {
+            id: 36,
+            text: "Which of these is not a primitive data type in Java?",
+            options: ["int", "char", "String", "float"],
+            correct: "String",
+            btl_level: 2,
+          },
+          {
+            id: 37,
+            text: "Which statement best describes an array?",
+            options: [
+              "A group of unrelated variables",
+              "A collection of variables of different data types",
+              "A collection of variables of the same data type stored at contiguous memory locations",
+              "A loop variable",
+            ],
+            correct:
+              "A collection of variables of the same data type stored at contiguous memory locations",
+            btl_level: 2,
+          },
+          {
+            id: 38,
+            text: "What happens if you access an array index out of bounds in Java?",
+            options: [
+              "Returns 0",
+              "Compilation error",
+              "Runtime error",
+              "Ignored",
+            ],
+            correct: "Runtime error",
+            btl_level: 2,
+          },
+          {
+            id: 39,
+            text: "How is a for loop different from a while loop?",
+            options: [
+              "A for loop is faster",
+              "A for loop is always infinite",
+              "A for loop is useful when the number of iterations is known",
+              "They are the same",
+            ],
+            correct:
+              "A for loop is useful when the number of iterations is known",
+            btl_level: 2,
+          },
+          {
+            id: 40,
+            text: "Which loop is most suitable when the number of iterations is unknown?",
+            options: ["for loop", "while loop", "do-while loop", "switch loop"],
+            correct: "while loop",
+            btl_level: 2,
+          },
+          {
+            id: 41,
+            text: "Infinite loops can be created using:",
+            options: ["for(;;)", "while(true)", "Both A & B", "None"],
+            correct: "Both A & B",
+            btl_level: 2,
+          },
+          {
+            id: 42,
+            text: "Why do we use functions in programming?",
+            options: [
+              "To slow down execution",
+              "To repeat the same code multiple times without rewriting",
+              "To reduce memory",
+              "To make loops unnecessary",
+            ],
+            correct: "To repeat the same code multiple times without rewriting",
+            btl_level: 2,
+          },
+          {
+            id: 43,
+            text: "Which of the following is pass by value in C++?",
+            options: [
+              "void func(int x)",
+              "void func(int &x)",
+              "void func(int* x)",
+              "void func(&x)",
+            ],
+            correct: "void func(int x)",
+            btl_level: 2,
+          },
+          {
+            id: 44,
+            text: "What is the output of int x = 5; int y = x++; cout << y;?",
+            options: ["4", "5", "6", "Error"],
+            correct: "5",
+            btl_level: 2,
+          },
+          {
+            id: 45,
+            text: "If a for loop is written as for(;;), what happens?",
+            options: [
+              "Runs once",
+              "Infinite loop",
+              "Compile error",
+              "Skips iteration",
+            ],
+            correct: "Infinite loop",
+            btl_level: 2,
+          },
+          // New Code Question (BTL 2)
+          {
+            id: 53,
+            text: 'What will be the output of this code?<code-block>int a = 5, b = 2;printf("%d", a/b);</code-block>',
+            options: ["2.5", "2", "2.0", "3"],
+            correct: "2",
+            btl_level: 2,
+          },
+
+          // BTL Level 3: Applying
+          {
+            id: 46,
+            text: "Which of the following code snippets correctly declares and initializes an array of 5 integers?",
+            options: [
+              "int arr[5] = {1,2,3,4,5};",
+              "int arr = {1,2,3,4,5};",
+              "int arr[5] = 1,2,3,4,5;",
+              "int arr(5) = {1,2,3,4,5};",
+            ],
+            correct: "int arr[5] = {1,2,3,4,5};",
+            btl_level: 3,
+          },
+          {
+            id: 47,
+            text: "Given: int a=5, b=3; if(a>b && b!=0) { a++; } else { b--; } What is the final value of 'a'?",
+            options: ["5", "6", "4", "Error"],
+            correct: "6",
+            btl_level: 3,
+          },
+          {
+            id: 48,
+            text: 'Predict the output: for(int i=0; i<3; i++) { if(i==1) continue; printf("%d", i); }',
+            options: ["012", "02", "12", "01"],
+            correct: "02",
+            btl_level: 3,
+          },
+          {
+            id: 49,
+            text: "What is the value of 'x' after the loop: int x=1; while(x<5) { x *= 2; }",
+            options: ["4", "5", "8", "16"],
+            correct: "8",
+            btl_level: 3,
+          },
+          {
+            id: 50,
+            text: "A function is defined as: int calc(int n) { return n * 2; }. What is the output of calc(calc(3))?",
+            options: ["6", "12", "3", "18"],
+            correct: "12",
+            btl_level: 3,
+          },
+          // New Code Questions (BTL 3)
+          {
+            id: 54,
+            text: 'What will be the output of this code?<code-block>int x = 10;\nx = x + 5;printf("%d", x);</code-block>',
+            options: ["10", "15", "5", "20"],
+            correct: "15",
+            btl_level: 3,
+          },
+          {
+            id: 55,
+            text: 'Predict the output:<code-block>for(int i=1; i<=3; i++) {\n    printf("%d ", i*i);\n}</code-block>',
+            options: ["1 2 3", "1 4 9", "2 4 6", "1 8 27"],
+            correct: "1 4 9",
+            btl_level: 3,
+          },
+          {
+            id: 56,
+            text: "What will the following Java code print?<code-block>int sum = 0;for(int i=1; i<=5; i++) {\n    sum += i;\n}\nSystem.out.println(sum);</code-block>",
+            options: ["5", "10", "15", "20"],
+            correct: "15",
+            btl_level: 3,
+          },
+        ];
+
+        // The results map stores answers and status, keyed by question ID
+        // NOTE: answer field now stores the OPTION TEXT (e.g., 'printf("Hello World");')
+        let resultsMap = new Map(); // Key: Q_ID (number), Value: { answer: string/null, state: 'not-visited'|'answered'|'marked'|'marked-answered'|'not-answered' }
+
+        // Initialize results map and history with the first question
+        const initialQuestion = questionPool.find((q) => q.btl_level === 1);
+        if (initialQuestion) {
+          currentQuestionId = initialQuestion.id;
+          questionHistory.push(currentQuestionId);
+          resultsMap.set(currentQuestionId, {
+            answer: null,
+            state: "not-answered",
+          });
+          askedQuestionsCount = 1;
+        } else {
+          console.error("No BTL Level 1 questions found.");
+          return;
+        }
+
+        const qNumEl = document.getElementById("q-num");
+        // We now use qTextWrapper to inject text/HTML
+        const qTextWrapper = document.getElementById("q-text-wrapper");
+        const optionsContainer = document.getElementById("options-container");
+        const paletteGrid = document.querySelector(".palette-grid");
+        const prevBtn = document.querySelector(".prev");
+        const btlLevelEl = document.getElementById("btl-level");
+
+        const modalOverlay = document.getElementById("btl-feedback-modal");
+        const modalTitle = document.getElementById("modal-title");
+        const modalMessage = document.getElementById("modal-message");
+        const modalIcon = document.getElementById("modal-icon");
+
+        // --- New Modal Function ---
+        function showBTLFeedback(newLevel, direction) {
+          let titleText;
+          let messageText;
+
+          // Remove previous classes to reset animation state
+          modalOverlay.classList.remove("modal-up", "modal-down");
+
+          if (direction === "up") {
+            titleText = "Level UP!";
+            messageText = `You successfully answered questions and advanced to BTL Level ${newLevel}: Application/Analysis.`;
+            modalOverlay.classList.add("modal-up");
+          } else {
+            // direction === 'down'
+            titleText = "Level Adjustment";
+            messageText = `The quiz complexity was reduced to BTL Level ${newLevel}: Remembering/Understanding. Keep trying!`;
+            modalOverlay.classList.add("modal-down");
+          }
+
+          modalTitle.textContent = titleText;
+          modalMessage.textContent = messageText;
+          // The icon HTML is now dynamic based on the CSS animation structure
+
+          modalOverlay.classList.add("visible");
+
+          // Automatically hide the modal after 2.5 seconds
+          setTimeout(() => {
+            modalOverlay.classList.remove("visible");
+          }, 2500);
+        }
+        // --------------------------
+
+        // Helper function to update the palette button class
+        function updatePaletteButton(qId) {
+          // Find the palette button corresponding to the question ID
+          const historyIndex = questionHistory.indexOf(qId);
+          const btn = paletteGrid.children[historyIndex];
+
+          // Check if button exists in the static palette
+          if (historyIndex >= MAX_QUESTIONS_TO_ASK || !btn) return;
+
+          const current = resultsMap.get(qId);
+          const state = current ? current.state : "not-visited";
+
+          // Clear all state classes first
+          btn.classList.remove("answered", "not-answered", "marked", "current");
+          btn.classList.add("not-visited"); // Default state for palette button
+
+          // Apply new state class
+          if (state === "answered" || state === "marked-answered") {
+            btn.classList.remove("not-visited");
+            btn.classList.add("answered");
+          } else if (state === "not-answered") {
+            btn.classList.remove("not-visited");
+            btn.classList.add("not-answered");
+          } else if (state === "marked") {
+            btn.classList.remove("not-visited");
+            btn.classList.add("marked");
+          }
+
+          // Apply 'current' if it's the active question
+          if (qId === currentQuestionId) {
+            btn.classList.add("current");
+          }
+        }
+
+        // Function to determine and set the state of the *current* question before leaving it
+        function updateCurrentQuestionState() {
+          if (!currentQuestionId) return;
+
+          const current = resultsMap.get(currentQuestionId);
+          const hasAnswer = current.answer !== null;
+          const currentState = current.state;
+
+          if (currentState === "marked" || currentState === "marked-answered") {
+            current.state = hasAnswer ? "marked-answered" : "marked";
+          } else {
+            current.state = hasAnswer ? "answered" : "not-answered";
+          }
+          resultsMap.set(currentQuestionId, current);
+          updatePaletteButton(currentQuestionId);
+        }
+
+        // Function to handle the core Adaptive Logic
+        function getNextQuestionId() {
+          // Store the previous BTL level before checking streaks
+          const previousBtlLevel = currentBtlLevel;
+
+          // 1. Evaluate performance on the last question asked
+          const lastQId = questionHistory[questionHistory.length - 1];
+          if (lastQId) {
+            const lastQ = questionPool.find((q) => q.id === lastQId);
+            const isCorrect = resultsMap.get(lastQId).answer === lastQ.correct;
+
+            if (isCorrect) {
+              correctStreak++;
+              incorrectStreak = 0;
+            } else {
+              incorrectStreak++;
+              correctStreak = 0;
+            }
+          }
+
+          // 2. Adjust target BTL level based on streaks
+          if (
+            correctStreak >= CORRECT_STREAK_TO_INCREASE &&
+            currentBtlLevel < 3
+          ) {
+            currentBtlLevel++;
+            correctStreak = 0;
+          } else if (
+            incorrectStreak >= INCORRECT_STREAK_TO_DECREASE &&
+            currentBtlLevel > 1
+          ) {
+            currentBtlLevel--;
+            incorrectStreak = 0;
+          }
+
+          // --- BTL Level Change Check (MODIFIED) ---
+          if (currentBtlLevel !== previousBtlLevel) {
+            const direction =
+              currentBtlLevel > previousBtlLevel ? "up" : "down";
+            showBTLFeedback(currentBtlLevel, direction);
+          }
+          // -----------------------------------------
+
+          // 3. Find the next unasked question at the target level
+          const askedIds = questionHistory;
+
+          // Prioritize marked questions that haven't been answered (if any)
+          let nextQ = questionPool.find(
+            (q) =>
+              resultsMap.has(q.id) && resultsMap.get(q.id).state === "marked"
+          );
+
+          // If no marked questions, find a new question at the target BTL level
+          if (!nextQ) {
+            nextQ = questionPool.find(
+              (q) => !askedIds.includes(q.id) && q.btl_level === currentBtlLevel
+            );
+          }
+
+          // Fallback: If no new questions at the target level, find any new unasked question
+          if (!nextQ) {
+            nextQ = questionPool.find((q) => !askedIds.includes(q.id));
+          }
+
+          // If no more unasked questions are available
+          if (!nextQ) {
+            return null;
+          }
+
+          // 4. Update state for the new question
+          if (!resultsMap.has(nextQ.id)) {
+            resultsMap.set(nextQ.id, { answer: null, state: "not-visited" });
+          }
+
+          // Add to history and update count if it's a new question
+          if (!questionHistory.includes(nextQ.id)) {
+            questionHistory.push(nextQ.id);
+            askedQuestionsCount = questionHistory.length;
+          }
+
+          return nextQ.id;
+        }
+
+        // Helper function to create a new palette button for a new question
+        function createPaletteButton(qId) {
+          // We rely on the initial fixed palette, so this function is simplified
+          const btn = document.createElement("button");
+          const historyIndex = questionHistory.indexOf(qId);
+          btn.textContent = historyIndex + 1;
+          btn.classList.add("palette-btn");
+          btn.addEventListener("click", () => {
+            const qId = questionHistory[historyIndex];
+            if (qId) {
+              updateCurrentQuestionState();
+              currentQuestionId = qId;
+              loadQuestion(qId);
+            }
+          });
+          return btn;
+        }
+
+        function loadQuestion(qId) {
+          const q = questionPool.find((q) => q.id === qId);
+          if (!q) return;
+
+          const currentResult = resultsMap.get(qId);
+
+          // 1. Update overall quiz progress view
+          const displayIndex = questionHistory.indexOf(qId) + 1;
+          qNumEl.textContent = `Question No. ${displayIndex}`;
+
+          // Hiding streak display, only showing BTL Level
+          btlLevelEl.textContent = `BTL. ${q.btl_level}`;
+
+          // 2. Update status if visiting for the first time
+          if (currentResult.state === "not-visited") {
+            currentResult.state = "not-answered";
+            resultsMap.set(qId, currentResult);
+          }
+
+          // 3. Render Question Text with Code Block formatting (MODIFIED)
+          let questionHTML = q.text;
+          questionHTML = questionHTML.replace(
+            /<code-block>([\s\S]*?)<\/code-block>/g,
+            (match, codeContent) => {
+              const codeLines = codeContent
+                .trim()
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+              return `<div class="code-box">${codeLines}</div>`;
+            }
+          );
+
+          // If code is present, inject the structure
+          if (q.text.includes("<code-block>")) {
+            const parts = q.text.split("<code-block>");
+            const introText = parts[0].trim();
+
+            // Regenerate the code block HTML using the transformed questionHTML
+            const codeBlockMatch = questionHTML.match(
+              /<div class="code-box">[\s\S]*?<\/div>/
+            );
+            const codeBlock = codeBlockMatch ? codeBlockMatch[0] : "";
+
+            // If the first part is just the question preamble (like "What is the output of:"), include it in a <p> tag
+            qTextWrapper.innerHTML =
+              (introText ? `<p class="mb-2">${introText}</p>` : "") + codeBlock;
+          } else {
+            // If no code, use a standard paragraph tag
+            qTextWrapper.innerHTML = `<p>${q.text}</p>`;
+          }
+
+          optionsContainer.innerHTML = "";
+
+          // 4. Render options
+          q.options.forEach((opt, i) => {
+            const optId = `q${qId}opt${i + 1}`;
+            const div = document.createElement("div");
+            div.classList.add("option");
+            div.innerHTML = `
+                  <!-- FIX: The radio button value must be the full option text, properly HTML encoded -->
+                  <input type="radio" id="${optId}" name="q${qId}answer" value="${opt.replace(
+              /"/g,
+              "&quot;"
+            )}" />
+                  <label for="${optId}">${String.fromCharCode(
+              65 + i
+            )}. ${opt}</label>
+                `;
+            optionsContainer.appendChild(div);
+          });
+
+          // 5. Restore previously selected answer
+          if (currentResult.answer !== null) {
+            // Must ensure the stored answer matches the encoded value in the radio input
+            const encodedAnswer = currentResult.answer.replace(/"/g, "&quot;");
+            const prevOpt = document.querySelector(
+              `input[name="q${qId}answer"][value="${encodedAnswer}"]`
+            );
+            if (prevOpt) prevOpt.checked = true;
+          }
+
+          // 6. Add change listener to save answer and update palette
+          document
+            .querySelectorAll(`input[name="q${qId}answer"]`)
+            .forEach((radio) => {
+              radio.addEventListener("change", (e) => {
+                const newResult = resultsMap.get(qId);
+                // Save the DECODED value (full option text) to results map
+                newResult.answer = e.target.value.replace(/&quot;/g, '"');
+
+                // Set state based on whether it was marked or not
+                if (newResult.state === "marked") {
+                  newResult.state = "marked-answered";
+                } else {
+                  newResult.state = "answered";
+                }
+                resultsMap.set(qId, newResult);
+                updatePaletteButton(qId);
+              });
+            });
+
+          // 7. Update all palette buttons visibility and state
+          updatePaletteUI();
+        }
+
+        // Updates the palette grid to reflect the current question history
+        function updatePaletteUI() {
+          // Since the palette is static (20 questions), we only need to update button states.
+
+          // Loop through all 20 static buttons
+          for (let i = 0; i < MAX_QUESTIONS_TO_ASK; i++) {
+            const btn = paletteGrid.children[i];
+            if (!btn) continue;
+
+            const qId = questionHistory[i];
+
+            if (qId) {
+              // Question was asked, update its state
+              updatePaletteButton(qId);
+              btn.style.visibility = "visible"; // Ensure visible
+              btn.disabled = false; // Enable clicks for previously asked questions
+            } else {
+              // Question not yet asked, keep it in the 'not-visited' visual state and disable interaction
+              btn.classList.remove(
+                "answered",
+                "not-answered",
+                "marked",
+                "current"
+              );
+              btn.classList.add("not-visited");
+              btn.style.visibility = "visible"; // Keep visible to show all 20 slots
+              btn.disabled = true;
+            }
+
+            // Ensure the current question is highlighted correctly, even if it's new
+            if (qId && qId === currentQuestionId) {
+              btn.classList.add("current");
+            } else {
+              btn.classList.remove("current");
+            }
+          }
+
+          // Show/hide previous button
+          prevBtn.classList.toggle(
+            "hidden",
+            questionHistory.indexOf(currentQuestionId) === 0
+          );
+        }
+
+        // --- Initialize static palette (New Logic for Fixed Size) ---
+        function initializeStaticPalette() {
+          paletteGrid.innerHTML = "";
+          for (let i = 0; i < MAX_QUESTIONS_TO_ASK; i++) {
+            const btn = document.createElement("button");
+            btn.textContent = i + 1;
+            btn.classList.add("palette-btn", "not-visited");
+            // Initially disable buttons that haven't been asked yet
+            btn.disabled = true;
+            btn.addEventListener("click", () => {
+              const qId = questionHistory[i];
+              if (qId) {
+                updateCurrentQuestionState();
+                currentQuestionId = qId;
+                loadQuestion(qId);
+              }
+            });
+            paletteGrid.appendChild(btn);
+          }
+        }
+        // -----------------------------------------------------------
+
+        // Navigation Handlers
+
+        // Helper function for navigating: handles both fixed previous and dynamic next
+        function navigate(direction) {
+          updateCurrentQuestionState(); // Save state of the question we're leaving
+
+          if (direction === "next") {
+            if (askedQuestionsCount >= MAX_QUESTIONS_TO_ASK) {
+              // Maximum questions reached, force submission confirmation
+              document.querySelector(".submit-btn").click();
+              return;
+            }
+
+            const nextQId = getNextQuestionId();
+            if (nextQId) {
+              currentQuestionId = nextQId;
+              loadQuestion(currentQuestionId);
+            } else {
+              // No new questions available, prompt for submission
+              document.querySelector(".submit-btn").click();
+            }
+          } else if (direction === "prev") {
+            const currentIndex = questionHistory.indexOf(currentQuestionId);
+            if (currentIndex > 0) {
+              currentQuestionId = questionHistory[currentIndex - 1];
+              loadQuestion(currentQuestionId);
+            }
+          }
+        }
+
+        // Save & Next Button (Triggers adaptive logic)
+        document.querySelector(".next").addEventListener("click", () => {
+          navigate("next");
+        });
+
+        // Previous Button (Fixed backward movement in history)
+        document.querySelector(".prev").addEventListener("click", () => {
+          navigate("prev");
+        });
+
+        // Clear Response Button
+        document.querySelector(".clear").addEventListener("click", () => {
+          const currentResult = resultsMap.get(currentQuestionId);
+          currentResult.answer = null;
+
+          // Uncheck the radio buttons
+          document
+            .querySelectorAll(`input[name="q${currentQuestionId}answer"]`)
+            .forEach((radio) => {
+              radio.checked = false;
+            });
+
+          // Update state
+          if (currentResult.state === "answered") {
+            currentResult.state = "not-answered";
+          } else if (currentResult.state === "marked-answered") {
+            currentResult.state = "marked";
+          }
+          resultsMap.set(currentQuestionId, currentResult);
+          updatePaletteButton(currentQuestionId);
+        });
+
+        // Mark for Review & Next Button
+        document.querySelector(".mark-review").addEventListener("click", () => {
+          const currentResult = resultsMap.get(currentQuestionId);
+          const hasAnswer = currentResult.answer !== null;
+
+          currentResult.state = hasAnswer ? "marked-answered" : "marked";
+          resultsMap.set(currentQuestionId, currentResult);
+
+          // Do not use navigate, as we want to trigger the adaptive logic for the *next* question
+          navigate("next");
+        });
+
+        // Timer
+        let timeLeft = 30 * 60;
+        const timerEl = document.getElementById("timer");
+        const timerInterval = setInterval(() => {
+          if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            // Replace alert with custom modal logic in a real app
+            alert("Time's up!");
+            document.querySelector(".submit-btn").click(); // Auto-submit
+            return;
+          }
+          timeLeft--;
+          const minutes = Math.floor(timeLeft / 60);
+          const seconds = timeLeft % 60;
+          timerEl.textContent = `${minutes
+            .toString()
+            .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+        }, 1000);
+
+        // Final Submission Logic (Handles adaptive structure)
+        const submitBtn = document.querySelector(".submit-btn");
+        submitBtn.addEventListener("click", () => {
+          // Update the state of the final question before submission
+          updateCurrentQuestionState();
+
+          const totalAnswered = questionHistory.filter(
+            (qId) =>
+              resultsMap.get(qId).state === "answered" ||
+              resultsMap.get(qId).state === "marked-answered"
+          ).length;
+
+          const totalMarked = questionHistory.filter(
+            (qId) =>
+              resultsMap.get(qId).state === "marked" ||
+              resultsMap.get(qId).state === "marked-answered"
+          ).length;
+
+          const totalNotAttempted = questionHistory.length - totalAnswered;
+
+          const confirmationMessage = `You have attempted ${totalAnswered} questions out of ${questionHistory.length} total asked. ${totalNotAttempted} questions were not answered. ${totalMarked} questions are marked for review. Are you sure you want to submit the quiz? This action cannot be undone.`;
+
+          // NOTE: Per instructions, use alert/confirm, though custom UI is generally preferred.
+          const isConfirmed = confirm(confirmationMessage);
+
+          if (isConfirmed) {
+            let score = 0;
+            let results = [];
+
+            // Only score the questions that were actually shown (in history)
+            questionHistory.forEach((qId) => {
+              const q = questionPool.find((item) => item.id === qId);
+              const result = resultsMap.get(qId);
+              const userAns = result.answer;
+              const correctAns = q.correct;
+              let status;
+
+              if (userAns === correctAns) {
+                score++;
+                status = "Correct";
+              } else if (userAns === null) {
+                // If answer is null, it was skipped/not answered/just marked
+                status = "Skipped";
+              } else {
+                // If userAns exists but is not correct
+                status = "Wrong";
+              }
+
+              results.push({
+                qNo: questionHistory.indexOf(qId) + 1, // Use display number
+                // FIX: Ensure the question text sent to the results page is clean.
+                // We strip the custom <code-block> tags to prevent URL encoding issues
+                question: q.text
+                  .replace(
+                    /<code-block>([\s\S]*?)<\/code-block>/g,
+                    " [CODE BLOCK] "
+                  )
+                  .trim(),
+                status: status,
+                userAns: userAns,
+                correctAns: correctAns,
+              });
+            });
+
+            // --- MODIFICATION: Calculate score based on fixed MAX_QUESTIONS_TO_ASK ---
+            alert(`Your Final Score: ${score}/${MAX_QUESTIONS_TO_ASK}`);
+
+            const resultsURL = encodeURIComponent(JSON.stringify(results));
+
+            // --- MODIFICATION: Pass MAX_QUESTIONS_TO_ASK (20) as the total ---\
+            window.location.href = `result.html?total=${MAX_QUESTIONS_TO_ASK}&results=${resultsURL}`;
+          }
+        });
+
+        // --- Initialize the static palette before loading the first question ---
+        initializeStaticPalette();
+
+        // Initial load
+        loadQuestion(currentQuestionId);
+      });
+    </script>
+  </body>
+</html>
