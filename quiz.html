@@ -982,8 +982,8 @@
             const optId = `q${qId}opt${i + 1}`;
             const div = document.createElement("div");
             div.classList.add("option");
+            // NOTE: Value uses opt.replace(/"/g, '&quot;') which is correct for HTML attribute safety
             div.innerHTML = `
-                  <!-- FIX: The radio button value must be the full option text, properly HTML encoded -->
                   <input type="radio" id="${optId}" name="q${qId}answer" value="${opt.replace(
               /"/g,
               "&quot;"
@@ -995,15 +995,33 @@
             optionsContainer.appendChild(div);
           });
 
-          // 5. Restore previously selected answer
+          // 5. Restore previously selected answer (FIX: Robust comparison)
           if (currentResult.answer !== null) {
-            // Must ensure the stored answer matches the encoded value in the radio input
-            const encodedAnswer = currentResult.answer.replace(/"/g, "&quot;");
-            const prevOpt = document.querySelector(
-              `input[name="q${qId}answer"][value="${encodedAnswer}"]`
+            const radios = document.querySelectorAll(
+              `input[name="q${qId}answer"]`
             );
-            if (prevOpt) prevOpt.checked = true;
+
+            radios.forEach((radio) => {
+              // 1. Get the stored answer (raw text, e.g., 'printf("Hello World");')
+              const storedAnswer = currentResult.answer;
+
+              // 2. Get the radio button's value attribute (HTML encoded, e.g., 'printf(&quot;Hello World&quot;);')
+              const radioValueEncoded = radio.value;
+
+              // 3. Decode the radio button's value for a true raw text comparison
+              // We rely on the browser's DOM parser to correctly decode the value from the attribute.
+              // The simplest way to reliably decode an HTML attribute value is to use a temporary element.
+              const temp = document.createElement("textarea");
+              temp.innerHTML = radioValueEncoded;
+              const radioValueDecoded = temp.value;
+
+              // FIX: Ensure comparison is done on the cleaned, raw string content.
+              if (radioValueDecoded.trim() === storedAnswer.trim()) {
+                radio.checked = true;
+              }
+            });
           }
+          // ----------------------------------------------------------------------
 
           // 6. Add change listener to save answer and update palette
           document
@@ -1012,7 +1030,10 @@
               radio.addEventListener("change", (e) => {
                 const newResult = resultsMap.get(qId);
                 // Save the DECODED value (full option text) to results map
-                newResult.answer = e.target.value.replace(/&quot;/g, '"');
+                // We use the same decoding method for consistency when saving the raw text
+                const temp = document.createElement("textarea");
+                temp.innerHTML = e.target.value;
+                newResult.answer = temp.value.trim();
 
                 // Set state based on whether it was marked or not
                 if (newResult.state === "marked") {
