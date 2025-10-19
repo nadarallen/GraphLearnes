@@ -4,6 +4,7 @@ body {
   padding: 20px;
   background-color: #f4f4f4;
   color: #333;
+  margin-top: 0;
 }
 
 h1 {
@@ -97,10 +98,13 @@ h1 {
   margin-top: 20px;
   border-radius: 8px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  min-height: 350px; /* Give some initial height */
-  display: flex;
-  flex-direction: column;
-  align-items: center; /* Center the content */
+  min-height: 450px; /* Increased height to better show side-by-side content */
+
+  /* --- KEY CHANGES FOR HORIZONTAL LAYOUT --- */
+  display: flex; /* Enable Flexbox */
+  flex-direction: row; /* Arrange children horizontally (default, but explicit is good) */
+  justify-content: space-between; /* Space out the diagram and description */
+  align-items: flex-start; /* Align items to the top (important for multi-line content) */
 }
 
 /* --- D3 Diagram Styling (New) --- */
@@ -111,6 +115,9 @@ h1 {
   max-width: 800px;
   height: 400px; /* Fixed height for D3 visualization */
   margin-bottom: 30px;
+  margin-left: 0px;
+  position: relative;
+  left: 0px;
 }
 
 /* Styling for the D3 nodes and links to match the Observable design */
@@ -150,13 +157,15 @@ h1 {
   background-color: #e9f5ff; /* Lighter blue background */
   border: 1px solid #a0d8ff;
   padding: 20px;
-  margin-top: 30px;
+  margin-top: 20px;
   border-radius: 8px;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
   width: 100%;
+  height: 100%;
   max-width: 700px;
-  min-height: 80px; /* Ensure it doesn't collapse too much */
+  min-height: 360px; /* Ensure it doesn't collapse too much */
   text-align: left;
+  margin-left: 60px;
 }
 
 #prereq-description-display h4 {
