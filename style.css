@@ -193,14 +193,33 @@ input[type="password"] {
 /* NEW STYLES FOR PREREQUISITES CONTAINER */
 .prereq-content {
   max-height: 0; /* Hidden by default */
+  background-color: #e6e6e6;
+  margin-top: 1px;
+  /* CHANGE 1: Set initial padding to 0 */
+  padding: 0 10px;
+  /* CHANGE 2: Set initial border to 0 */
+  border: #c5c5c5 0px solid;
+  border-radius: 5px;
   overflow: hidden;
-  transition: max-height 0.5s ease-in-out, margin-top 0.5s ease-in-out;
+  /* Keep the transition for a smooth collapse/expand */
+  transition: max-height 0.5s ease-in-out, margin-top 0.5s ease-in-out,
+    padding 0.5s ease-in-out,
+    /* CHANGE 3: Add padding to transition */ border 0.5s ease-in-out,
+    transform 0.3s ease-in-out; /* CHANGE 4: Add border to transition */
+}
+
+.prereq-content:hover {
+  transform: scale(1.05);
 }
 
 /* This class is added by JS to show the content */
 .prereq-content.show {
   max-height: 500px; /* Set a height large enough for any content */
   margin-top: 1rem; /* Adds space between title and content when shown */
+  /* NEW RULE 1: Restore the padding when shown */
+  padding: 10px;
+  /* NEW RULE 2: Restore the border when shown */
+  border: #c5c5c5 0.2px solid;
 }
 
 .prereq-content h4 {
@@ -233,4 +252,8 @@ input[type="password"] {
 }
 .quiz-btn:hover {
   background-color: #218838;
+}
+
+.balls {
+  text-decoration: none;
 }

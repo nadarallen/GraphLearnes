@@ -1,156 +1,168 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>GraphEdu Home</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
     <div class="dashboard-container">
-        <header class="dashboard-header">
-            <div class="site-name">GraphEdu</div>
-            <a href="login.html" class="logout-button">Logout</a>
-        </header>
+      <header class="dashboard-header">
+        <div class="site-name">GraphEdu</div>
+        <a href="login.html" class="logout-button">Logout</a>
+      </header>
 
-        <div class="dashboard-body">
-            <aside class="sidebar">
-                <nav>
-                    <ul>
-                        <li>
-                            <button class="dropdown-btn" id="ds-dropdown-btn">DS ▾</button>
-                            <ul class="dropdown-content" id="ds-chapters">
-                                <li><a>1) Introduction to DS</a></li>
-                                <li><a>2) Stacks & Queues</a></li>
-                                <li><a>3) Linked List</a></li>
-                                <li><a>4) Trees</a></li>
-                                <li><a>5) Graphs</a></li>
-                                <li><a>6) Searching Techniques</a></li>
-                            </ul>
-                        </li>
-                        <li>
-                            <a href="#" class="sidebar-link">DSGT</a>
-                        </li>
-                    </ul>
-                </nav>
-            </aside>
+      <div class="dashboard-body">
+        <aside class="sidebar">
+          <nav>
+            <ul>
+              <li>
+                <button class="dropdown-btn" id="ds-dropdown-btn">DS ▾</button>
+                <ul class="dropdown-content" id="ds-chapters">
+                  <li><a>1) Introduction to DS</a></li>
+                  <li><a>2) Stacks & Queues</a></li>
+                  <li><a>3) Linked List</a></li>
+                  <li><a>4) Trees</a></li>
+                  <li><a>5) Graphs</a></li>
+                  <li><a>6) Searching Techniques</a></li>
+                </ul>
+              </li>
+              <li>
+                <a href="#" class="sidebar-link">DSGT</a>
+              </li>
+            </ul>
+          </nav>
+        </aside>
 
-            <main class="main-content">
-                <h1>Data Structures (DS)</h1>
-                <div class="content-grid">
-                    <div class="content-box">
-                        <h3>01. Introduction to Data Structures</h3>
-                        <div class="prereq-content">
-                            <h4>Prerequisites:</h4>
-                            <ul>
-                                <li>Basic programming (C/C++/Java)</li>
-                                <li>Data types & variables</li>
-                                <li>Arrays</li>
-                                <li>Loops & functions</li>
-                            </ul>
-                            <a href="quiz.html?topic=Introduction to Data Structures" class="quiz-btn">TAKE QUIZ</a>
-                        </div>
-                    </div>
-                    <div class="content-box">
-                        <h3>02. Stacks and Queues</h3>
-                        <div class="prereq-content">
-                            <h4>Prerequisites:</h4>
-                            <ul>
-                                <li>Arrays</li>
-                                <li>Functions & modular code</li>
-                                <li>Expression evaluation (for infix/postfix)</li>
-                                <li>Basic understanding of ADT</li>
-                            </ul>
-                            <a href="quiz.html?topic=Stacks and Queues" class="quiz-btn">TAKE QUIZ</a>
-                        </div>
-                    </div>
-                     <div class="content-box">
-                        <h3>03. Linked Lists</h3>
-                        <div class="prereq-content">
-                            <h4>Prerequisites:</h4>
-                            <ul>
-                                <li>Pointers</li>
-                                <li>Dynamic memory (malloc, free)</li>
-                                <li>Structures (struct/class)</li>
-                                <li>Array vs pointer concepts</li>
-                            </ul>
-                             <a href="quiz.html?topic=Linked Lists" class="quiz-btn">TAKE QUIZ</a>
-                        </div>
-                    </div>
-                    <div class="content-box">
-                        <h3>04. Trees</h3>
-                        <div class="prereq-content">
-                            <h4>Prerequisites:</h4>
-                            <ul>
-                                <li>Linked list concepts</li>
-                                <li>Recursion</li>
-                                <li>Stack (for traversal logic)</li>
-                                <li>Binary search basics</li>
-                            </ul>
-                             <a href="quiz.html?topic=Trees" class="quiz-btn">TAKE QUIZ</a>
-                        </div>
-                    </div>
-                    <div class="content-box">
-                        <h3>05. Graphs</h3>
-                        <div class="prereq-content">
-                            <h4>Prerequisites:</h4>
-                            <ul>
-                                <li>Tree traversal (DFS/BFS)</li>
-                                <li>Stack & Queue</li>
-                                <li>2D arrays (adjacency matrix)</li>
-                                <li>Recursion</li>
-                            </ul>
-                             <a href="quiz.html?topic=Graphs" class="quiz-btn">TAKE QUIZ</a>
-                        </div>
-                    </div>
-                    <div class="content-box">
-                        <h3>06. Searching Techniques</h3>
-                        <div class="prereq-content">
-                            <h4>Prerequisites:</h4>
-                            <ul>
-                                <li>Arrays</li>
-                                <li>Linear & Binary search</li>
-                                <li>Modulo operation (for hashing)</li>
-                                <li>Functions & logic building</li>
-                            </ul>
-                             <a href="quiz.html?topic=Searching Techniques" class="quiz-btn">TAKE QUIZ</a>
-                        </div>
-                    </div>
-                </div>
-            </main>
-        </div>
+        <main class="main-content">
+          <h1>Data Structures (DS)</h1>
+          <div class="content-grid">
+            <div class="content-box">
+              <h3>01. Introduction to Data Structures</h3>
+              <div class="prereq-content">
+                <a href="expand.html" class="balls">
+                  <h4>Prerequisites:</h4>
+                  <ul>
+                    <li>Basic programming (C/C++/Java)</li>
+                    <li>Data types & variables</li>
+                    <li>Arrays</li>
+                    <li>Loops & functions</li>
+                  </ul>
+                </a>
+                <a
+                  href="quiz.html?topic=Introduction to Data Structures"
+                  class="quiz-btn"
+                  >TAKE QUIZ</a
+                >
+              </div>
+            </div>
+            <div class="content-box">
+              <h3>02. Stacks and Queues</h3>
+              <div class="prereq-content">
+                <h4>Prerequisites:</h4>
+                <ul>
+                  <li>Arrays</li>
+                  <li>Functions & modular code</li>
+                  <li>Expression evaluation (for infix/postfix)</li>
+                  <li>Basic understanding of ADT</li>
+                </ul>
+                <a href="quiz.html?topic=Stacks and Queues" class="quiz-btn"
+                  >TAKE QUIZ</a
+                >
+              </div>
+            </div>
+            <div class="content-box">
+              <h3>03. Linked Lists</h3>
+              <div class="prereq-content">
+                <h4>Prerequisites:</h4>
+                <ul>
+                  <li>Pointers</li>
+                  <li>Dynamic memory (malloc, free)</li>
+                  <li>Structures (struct/class)</li>
+                  <li>Array vs pointer concepts</li>
+                </ul>
+                <a href="quiz.html?topic=Linked Lists" class="quiz-btn"
+                  >TAKE QUIZ</a
+                >
+              </div>
+            </div>
+            <div class="content-box">
+              <h3>04. Trees</h3>
+              <div class="prereq-content">
+                <h4>Prerequisites:</h4>
+                <ul>
+                  <li>Linked list concepts</li>
+                  <li>Recursion</li>
+                  <li>Stack (for traversal logic)</li>
+                  <li>Binary search basics</li>
+                </ul>
+                <a href="quiz.html?topic=Trees" class="quiz-btn">TAKE QUIZ</a>
+              </div>
+            </div>
+            <div class="content-box">
+              <h3>05. Graphs</h3>
+              <div class="prereq-content">
+                <h4>Prerequisites:</h4>
+                <ul>
+                  <li>Tree traversal (DFS/BFS)</li>
+                  <li>Stack & Queue</li>
+                  <li>2D arrays (adjacency matrix)</li>
+                  <li>Recursion</li>
+                </ul>
+                <a href="quiz.html?topic=Graphs" class="quiz-btn">TAKE QUIZ</a>
+              </div>
+            </div>
+            <div class="content-box">
+              <h3>06. Searching Techniques</h3>
+              <div class="prereq-content">
+                <h4>Prerequisites:</h4>
+                <ul>
+                  <li>Arrays</li>
+                  <li>Linear & Binary search</li>
+                  <li>Modulo operation (for hashing)</li>
+                  <li>Functions & logic building</li>
+                </ul>
+                <a href="quiz.html?topic=Searching Techniques" class="quiz-btn"
+                  >TAKE QUIZ</a
+                >
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
 
     <script>
-        // --- Sidebar Dropdown Functionality ---
-        const dropdownBtn = document.getElementById("ds-dropdown-btn");
-        const chapterList = document.getElementById("ds-chapters");
-        dropdownBtn.addEventListener("click", function() {
-            chapterList.classList.toggle("show");
+      // --- Sidebar Dropdown Functionality ---
+      const dropdownBtn = document.getElementById("ds-dropdown-btn");
+      const chapterList = document.getElementById("ds-chapters");
+      dropdownBtn.addEventListener("click", function () {
+        chapterList.classList.toggle("show");
+      });
+
+      // --- Content Box Accordion Functionality ---
+      const contentBoxes = document.querySelectorAll(".content-box");
+      contentBoxes.forEach((clickedBox) => {
+        clickedBox.addEventListener("click", function (event) {
+          // Prevent click from bubbling up if the quiz button was the target
+          if (event.target.classList.contains("quiz-btn")) {
+            return;
+          }
+          const currentContent = this.querySelector(".prereq-content");
+          const isAlreadyShown = currentContent.classList.contains("show");
+
+          // First, close all other boxes
+          contentBoxes.forEach((otherBox) => {
+            otherBox.querySelector(".prereq-content").classList.remove("show");
+          });
+
+          // If the clicked box was not already open, open it.
+          if (!isAlreadyShown) {
+            currentContent.classList.add("show");
+          }
         });
-
-        // --- Content Box Accordion Functionality ---
-        const contentBoxes = document.querySelectorAll(".content-box");
-        contentBoxes.forEach(clickedBox => {
-            clickedBox.addEventListener("click", function(event) {
-                // Prevent click from bubbling up if the quiz button was the target
-                 if (event.target.classList.contains('quiz-btn')) {
-                    return;
-                }
-                const currentContent = this.querySelector(".prereq-content");
-                const isAlreadyShown = currentContent.classList.contains("show");
-
-                // First, close all other boxes
-                contentBoxes.forEach(otherBox => {
-                    otherBox.querySelector(".prereq-content").classList.remove("show");
-                });
-
-                // If the clicked box was not already open, open it.
-                if(!isAlreadyShown) {
-                    currentContent.classList.add("show");
-                }
-            });
-        });
+      });
     </script>
-</body>
+  </body>
 </html>

@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Data Structures Topics - Prereq Description (D3 Integration)</title>
+    <link rel="stylesheet" href="expand.css" />
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+  </head>
+  <body>
+    <h1>
+      <div class="button-container">
+        <a href="home.html"
+          ><button class="button">
+            <span>Back </span>
+          </button></a
+        >
+        Introduction to DS
+      </div>
+    </h1>
+
+    <nav id="topics-nav">
+      <ul></ul>
+    </nav>
+
+    <div id="main-content-area">
+      <div id="diagram-placeholder">
+        <p>
+          Select a main topic from the list above to see its prerequisites
+          diagram.
+        </p>
+      </div>
+
+      <div id="prereq-description-display" style="display: none">
+        <h4>Prerequisite Description:</h4>
+        <p id="current-prereq-description">
+          Click on a prerequisite box in the diagram to see its description
+          here.
+        </p>
+      </div>
+    </div>
+
+    <script>
+      // 1. DATA STRUCTURE (Topics, Descriptions, and Prerequisites with their own descriptions)
+      const dsModules = [
+        {
+          id: "ds-intro",
+          title: "01. Introduction to Data Structures",
+          longDescription:
+            "This module covers the fundamentals: what a data structure is, why we need them, and how to analyze their efficiency using Big O notation. It also reviews basic concepts like memory allocation and simple data types.",
+          prerequisites: [
+            {
+              id: "prereq-basic-prog",
+              title: "Basic Programming",
+              description:
+                "Understanding of fundamental programming concepts in languages like C, C++, or Java (variables, operators, control flow).",
+              order: 1,
+            },
+            {
+              id: "prereq-data-types",
+              title: "Data Types & Variables",
+              description:
+                "Knowledge of basic data types (int, float, char, boolean) and how to declare and use variables.",
+              order: 2,
+            },
+            {
+              id: "prereq-arrays",
+              title: "Arrays",
+              description:
+                "Familiarity with arrays: declaration, initialization, accessing elements, and basic operations.",
+              order: 3,
+            },
+            {
+              id: "prereq-loops-funcs",
+              title: "Loops & Functions",
+              description:
+                "Proficiency in using loops (for, while) and defining/calling functions to structure code.",
+              order: 4,
+            },
+          ],
+        },
+        {
+          id: "ds-stacks-queues",
+          title: "02. Stacks and Queues",
+          longDescription:
+            "Learn about two fundamental linear data structures: Stacks (LIFO) and Queues (FIFO). This topic explores their operations (Push/Pop, Enqueue/Dequeue), typical use cases like function calls, and array-based or linked list implementations.",
+          prerequisites: [
+            {
+              id: "prereq-arrays",
+              title: "Arrays",
+              description:
+                "Familiarity with arrays: declaration, initialization, accessing elements, and basic operations.",
+              order: 1,
+            },
+            {
+              id: "prereq-funcs-modular",
+              title: "Functions & Modular Code",
+              description:
+                "Ability to write reusable functions and organize code into logical modules.",
+              order: 2,
+            },
+            {
+              id: "prereq-expr-eval",
+              title: "Expression Evaluation",
+              description:
+                "Basic understanding of how expressions are evaluated, useful for infix/postfix conversions.",
+              order: 3,
+            },
+            {
+              id: "prereq-adt",
+              title: "Basic ADT",
+              description:
+                "An introductory understanding of Abstract Data Types (ADT) concept.",
+              order: 4,
+            },
+          ],
+        },
+        {
+          id: "ds-linked-lists",
+          title: "03. Linked Lists",
+          longDescription:
+            "This chapter introduces dynamic data structures where elements are linked using pointers. You will study single, double, and circular linked lists, focusing on operations like insertion, deletion, and traversal, and dynamic memory management.",
+          prerequisites: [
+            {
+              id: "prereq-pointers",
+              title: "Pointers",
+              description:
+                "Core understanding of pointers, memory addresses, and pointer arithmetic.",
+              order: 1,
+            },
+            {
+              id: "prereq-dynamic-mem",
+              title: "Dynamic Memory",
+              description:
+                "Knowledge of dynamic memory allocation and deallocation (malloc/free in C/C++, new/delete in C++).",
+              order: 2,
+            },
+            {
+              id: "prereq-structs",
+              title: "Structures/Classes",
+              description:
+                "Familiarity with defining and using structures or classes to group related data.",
+              order: 3,
+            },
+            {
+              id: "prereq-array-vs-ptr",
+              title: "Array vs Pointer Concepts",
+              description:
+                "Understanding the differences and relationships between arrays and pointers.",
+              order: 4,
+            },
+          ],
+        },
+        {
+          id: "ds-trees",
+          title: "04. Trees",
+          longDescription:
+            "Explore non-linear structures starting with binary trees and binary search trees (BSTs). Key concepts include various traversal methods (Inorder, Preorder, Postorder) and balancing techniques for efficient search and retrieval operations.",
+          prerequisites: [
+            {
+              id: "prereq-linked-list-concepts",
+              title: "Linked List Concepts",
+              description:
+                "Solid understanding of linked list operations and node manipulation.",
+              order: 1,
+            },
+            {
+              id: "prereq-recursion",
+              title: "Recursion",
+              description:
+                "Ability to write and understand recursive functions.",
+              order: 2,
+            },
+            {
+              id: "prereq-stack-logic",
+              title: "Stack (for Traversal)",
+              description:
+                "Knowledge of stacks for iterative tree traversal algorithms.",
+              order: 3,
+            },
+            {
+              id: "prereq-binary-search-basics",
+              title: "Binary Search Basics",
+              description:
+                "Understanding the principles of binary search on sorted data.",
+              order: 4,
+            },
+          ],
+        },
+        {
+          id: "ds-graphs",
+          title: "05. Graphs",
+          longDescription:
+            "Graphs are flexible structures used to model networks and relationships. This module covers graph representations (adjacency matrix/list) and critical algorithms like Breadth-First Search (BFS), Depth-First Search (DFS), and finding shortest paths.",
+          prerequisites: [
+            {
+              id: "prereq-tree-traversal",
+              title: "Tree Traversal (DFS/BFS)",
+              description:
+                "Familiarity with depth-first and breadth-first search algorithms on trees.",
+              order: 1,
+            },
+            {
+              id: "prereq-stack-queue",
+              title: "Stack & Queue",
+              description:
+                "Proficiency in using both stack and queue data structures.",
+              order: 2,
+            },
+            {
+              id: "prereq-2d-arrays",
+              title: "2D Arrays (Adj. Matrix)",
+              description:
+                "Understanding of 2-dimensional arrays for representing matrices, e.g., adjacency matrices.",
+              order: 3,
+            },
+            {
+              id: "prereq-recursion",
+              title: "Recursion",
+              description:
+                "Ability to write and understand recursive functions for graph algorithms.",
+              order: 4,
+            },
+          ],
+        },
+        {
+          id: "ds-searching-techniques",
+          title: "06. Searching Techniques",
+          longDescription:
+            "Focuses on methods for quickly locating an item within a data structure. Topics include the efficiency of Linear Search versus Binary Search, as well as an introduction to Hashing for near-constant time lookups.",
+          prerequisites: [
+            {
+              id: "prereq-arrays",
+              title: "Arrays",
+              description:
+                "Strong understanding of array manipulation and indexing.",
+              order: 1,
+            },
+            {
+              id: "prereq-linear-binary-search",
+              title: "Linear & Binary Search",
+              description:
+                "Knowledge of linear and binary search algorithms and their complexities.",
+              order: 2,
+            },
+            {
+              id: "prereq-modulo-op",
+              title: "Modulo Operation (Hashing)",
+              description:
+                "Understanding of the modulo operator and its application in hashing.",
+              order: 3,
+            },
+            {
+              id: "prereq-funcs-logic",
+              title: "Functions & Logic Building",
+              description:
+                "Ability to design and implement functions and develop logical problem-solving skills.",
+              order: 4,
+            },
+          ],
+        },
+      ];
+
+      let currentSelectedTopicId = null;
+
+      // 2. FUNCTION TO RENDER THE MAIN TOPICS NAVIGATION
+      function renderMainTopicsNav() {
+        const navList = document.querySelector("#topics-nav ul");
+        navList.innerHTML = "";
+
+        dsModules.forEach((module) => {
+          const li = document.createElement("li");
+          const link = document.createElement("a");
+
+          link.textContent = module.title;
+          link.href = "#";
+          link.dataset.moduleId = module.id;
+          link.addEventListener("click", (e) => {
+            e.preventDefault();
+            displayTopicDiagram(module.id);
+          });
+
+          li.appendChild(link);
+          navList.appendChild(li);
+        });
+      }
+
+      // 3. FUNCTION TO DISPLAY THE DIAGRAM FOR A SELECTED MAIN TOPIC (NOW USING D3)
+      function displayTopicDiagram(moduleId) {
+        currentSelectedTopicId = moduleId;
+        const topic = dsModules.find((m) => m.id === moduleId);
+        const diagramPlaceholder = document.getElementById(
+          "diagram-placeholder"
+        );
+        const prereqDescDisplay = document.getElementById(
+          "prereq-description-display"
+        );
+        const currentPrereqDesc = document.getElementById(
+          "current-prereq-description"
+        );
+
+        if (!topic) {
+          diagramPlaceholder.innerHTML = "<p>Topic not found.</p>";
+          prereqDescDisplay.style.display = "none";
+          return;
+        }
+
+        // Clear the placeholder and show the description area
+        diagramPlaceholder.innerHTML = "";
+        prereqDescDisplay.style.display = "block";
+        currentPrereqDesc.textContent =
+          "Click on a node in the D3 diagram to see its prerequisite description here.";
+
+        // --- Prepare data for D3 ---
+        // Convert the topic and its prerequisites into a hierarchical structure
+        const d3Data = {
+          name: topic.title,
+          description: topic.longDescription,
+          children: topic.prerequisites.map((p) => ({
+            name: p.title,
+            description: p.description,
+            id: p.id, // Keep ID for potential click events
+          })),
+        };
+
+        // Render the D3 tree
+        renderD3Tree(d3Data, diagramPlaceholder.id, topic.prerequisites);
+      }
+
+      // 4. D3 RENDERING FUNCTION (Adapted from ObservableHQ Tree Component)
+      function renderD3Tree(data, containerId, prerequisites) {
+        const container = document.getElementById(containerId);
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+        const margin = { top: 30, right: 30, bottom: 30, left: 30 };
+
+        // 1. Create the SVG container
+        const svg = d3
+          .select(`#${containerId}`)
+          .append("svg")
+          .attr("width", width)
+          .attr("height", height)
+          .attr("viewBox", [-width / 2, -margin.top, width, height]); // Center view
+
+        // 2. Compute the tree layout
+        const treeLayout = d3
+          .tree()
+          .size([
+            width - margin.left - margin.right,
+            height - margin.top - margin.bottom,
+          ]);
+
+        const root = d3.hierarchy(data);
+        treeLayout(root);
+
+        // Position the root node at the top center
+        root.x0 = 0;
+        root.y0 = 0;
+        root.y = 0; // Set y-coordinate for the root
+
+        // Adjust children positions to fan out (basic vertical layout here for simplicity)
+        // We'll manually adjust the layout for a cleaner look.
+        // For a fixed fan-out as in the original CSS, a custom link generator is better.
+        // For simplicity, we use the standard D3 tree but adjust its orientation to top-down.
+
+        // Re-run tree layout for a vertical orientation
+        const verticalTreeLayout = d3
+          .tree()
+          .size([width, height - 2 * margin.top]);
+        verticalTreeLayout(root);
+
+        // Move the whole tree down from the top margin
+        svg.attr("transform", `translate(0, ${margin.top})`);
+
+        // 3. Draw the links (paths)
+        const linkGenerator = d3
+          .linkVertical() // Use linkVertical for top-down layout
+          .x((d) => d.x - width / 2) // Adjust for the root being at x=0 of the viewbox
+          .y((d) => d.y);
+
+        svg
+          .append("g")
+          .attr("fill", "none")
+          .attr("stroke", "#555")
+          .attr("stroke-opacity", 0.4)
+          .attr("stroke-width", 1.5)
+          .selectAll("path")
+          .data(root.links())
+          .join("path")
+          .attr("d", linkGenerator);
+
+        // 4. Draw the nodes
+        const node = svg
+          .append("g")
+          .selectAll("g")
+          .data(root.descendants())
+          .join("g")
+          .attr("transform", (d) => `translate(${d.x - width / 2},${d.y})`) // Adjust for the root being at x=0
+          .attr(
+            "class",
+            (d) => `node ${d.children ? "node--internal" : "node--leaf"}`
+          );
+
+        // Add circles for visual nodes
+        node
+          .append("circle")
+          .attr("r", 5)
+          .attr("fill", (d) =>
+            d.depth === 0 ? "#90caf9" : d.children ? "#555" : "#90caf9"
+          ) // Root node color
+          .attr("stroke", (d) =>
+            d.depth === 0 ? "#2196f3" : d.children ? "#555" : "#2196f3"
+          )
+          .attr("stroke-width", 2);
+
+        // Add text labels
+        node
+          .append("text")
+          .attr("dy", "0.31em")
+          .attr("x", (d) => (d.children ? -8 : 8))
+          .attr("text-anchor", (d) => (d.children ? "end" : "start"))
+          .text((d) => d.data.name)
+          .clone(true)
+          .lower()
+          .attr("stroke-linejoin", "round")
+          .attr("stroke-width", 3)
+          .attr("stroke", "white");
+
+        // Add click handler to leaf nodes (prerequisites)
+        node
+          .filter((d) => !d.children && d.data.id)
+          .attr("cursor", "pointer")
+          .on("click", (event, d) => {
+            handleD3PrereqClick(d.data.id, prerequisites);
+          });
+      }
+
+      // 5. FUNCTION TO HANDLE CLICK ON A D3 PREREQUISITE NODE
+      function handleD3PrereqClick(prereqId, currentPrerequisites) {
+        const selectedPrereq = currentPrerequisites.find(
+          (p) => p.id === prereqId
+        );
+
+        if (selectedPrereq) {
+          const prereqDescDisplay = document.getElementById(
+            "prereq-description-display"
+          );
+          const currentPrereqDesc = document.getElementById(
+            "current-prereq-description"
+          );
+
+          prereqDescDisplay.style.display = "block"; // Ensure it's visible
+          currentPrereqDesc.innerHTML = `<strong>${selectedPrereq.title}:</strong> ${selectedPrereq.description}`;
+        }
+      }
+
+      // Initialize the page
+      document.addEventListener("DOMContentLoaded", () => {
+        renderMainTopicsNav();
+        // Optionally display the first topic's diagram by default
+        if (dsModules.length > 0) {
+          displayTopicDiagram(dsModules[0].id);
+        }
+      });
+    </script>
+  </body>
+</html>
