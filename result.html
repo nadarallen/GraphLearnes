@@ -25,11 +25,12 @@
       }
 
       .score-circle .bg {
-        stroke: #B8E0F5; /* Baby blue light */
+        /* Adjusted background to a neutral color, or you can keep red */
+        stroke: #dc3545;
       }
 
       .score-circle .progress {
-        stroke: #001F3F; /* Navy - Progress color */
+        stroke: #28a745; /* Progress color (green) */
         stroke-dasharray: 339.292; /* circumference = 2 * PI * 54 */
         stroke-dashoffset: 339.292;
         transition: stroke-dashoffset 1s ease;
@@ -60,15 +61,13 @@
       }
 
       .review-item.correct {
-        border-left: 6px solid #001F3F; /* Navy */
-        background: linear-gradient(90deg, #B8E0F5 0%, #89CFF0 100%);
+        border-left: 6px solid #28a745;
       }
 
       /* The 'incorrect' class will now apply to Wrong and Skipped answers */
       .review-item.wrong,
       .review-item.skipped {
-        border-left: 6px solid #C3B091; /* Khaki */
-        background: linear-gradient(90deg, #B8E0F5 0%, #89CFF0 100%);
+        border-left: 6px solid #dc3545;
       }
 
       .review-question {

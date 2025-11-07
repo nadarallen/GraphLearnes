@@ -1,10 +1,10 @@
 /* --- Color Palette Variables --- */
 :root {
-  --white: #FFFFFF;
-  --baby-blue: #89CFF0;
-  --navy: #001F3F;
-  --khaki: #C3B091;
-  --baby-blue-light: #B8E0F5;
+  --white: #ffffff;
+  --baby-blue: #89cff0;
+  --navy: #001f3f;
+  --khaki: #c3b091;
+  --baby-blue-light: #b8e0f5;
   --navy-light: #003366;
 }
 
@@ -18,7 +18,11 @@ body {
 }
 
 .login-container {
-  background: linear-gradient(135deg, var(--baby-blue-light) 0%, var(--baby-blue) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--baby-blue-light) 0%,
+    var(--baby-blue) 100%
+  );
   padding: 2.5rem 3rem;
   border-radius: 20px;
   box-shadow: 0 8px 30px rgba(0, 31, 63, 0.25);
@@ -130,7 +134,7 @@ input[type="password"]:focus {
   border: 2px solid transparent;
 }
 .logout-button:hover {
-  background-color: var(--navy);
+  background-color: red;
   color: var(--white);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 31, 63, 0.3);
@@ -142,7 +146,11 @@ input[type="password"]:focus {
 }
 .sidebar {
   width: 250px;
-  background: linear-gradient(180deg, var(--navy) 0%, var(--navy-light) 100%);
+  background: linear-gradient(
+    180deg,
+    var(--white) 0%,
+    var(--baby-blue-light) 100%
+  );
   color: var(--white);
   padding: 1.5rem;
   flex-shrink: 0;
@@ -162,7 +170,7 @@ input[type="password"]:focus {
   width: 100%;
   text-align: left;
   padding: 0.85rem 1.2rem;
-  color: var(--white);
+  color: black;
   text-decoration: none;
   border-radius: 8px;
   background-color: transparent;
@@ -187,7 +195,7 @@ input[type="password"]:focus {
   transition: max-height 0.4s ease-out;
 }
 .dropdown-content a {
-  color: var(--baby-blue-light);
+  color: var(--navy);
   padding: 0.6rem 1.2rem;
   display: block;
   text-decoration: none;
@@ -223,7 +231,11 @@ input[type="password"]:focus {
 
 /* MODIFIED CONTENT BOX STYLING */
 .content-box {
-  background: linear-gradient(135deg, var(--white) 0%, var(--baby-blue-light) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--white) 0%,
+    var(--baby-blue-light) 100%
+  );
   padding: 1.8rem;
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0, 31, 63, 0.15);
@@ -249,7 +261,11 @@ input[type="password"]:focus {
 /* NEW STYLES FOR PREREQUISITES CONTAINER */
 .prereq-content {
   max-height: 0; /* Hidden by default */
-  background: linear-gradient(135deg, var(--baby-blue-light) 0%, var(--baby-blue) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--baby-blue-light) 0%,
+    var(--baby-blue) 100%
+  );
   margin-top: 1px;
   /* CHANGE 1: Set initial padding to 0 */
   padding: 0 10px;

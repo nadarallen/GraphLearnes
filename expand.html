@@ -15,7 +15,7 @@
             <span>Back </span>
           </button></a
         >
-        <span>Introduction to DS</span>
+        <span>Data Structures</span>
       </div>
     </h1>
 
@@ -44,7 +44,8 @@
         <div id="prereq-description-display">
           <h4>Prerequisite Description:</h4>
           <p id="current-prereq-description">
-            Click on a prerequisite node in the diagram to see its description here.
+            Click on a prerequisite node in the diagram to see its description
+            here.
           </p>
         </div>
       </div>
@@ -302,7 +303,9 @@
         const diagramPlaceholder = document.getElementById(
           "diagram-placeholder"
         );
-        const descriptionContainer = document.getElementById("description-container");
+        const descriptionContainer = document.getElementById(
+          "description-container"
+        );
 
         if (!topic) {
           diagramPlaceholder.innerHTML = "<p>Topic not found.</p>";
@@ -315,13 +318,15 @@
         // Clear the placeholder and show the description area
         diagramPlaceholder.innerHTML = "";
         descriptionContainer.style.display = "block";
-        
+
         // Update topic summary
         const topicSummary = document.getElementById("current-topic-summary");
         topicSummary.textContent = topic.longDescription;
-        
+
         // Reset prerequisite description
-        const currentPrereqDesc = document.getElementById("current-prereq-description");
+        const currentPrereqDesc = document.getElementById(
+          "current-prereq-description"
+        );
         currentPrereqDesc.textContent =
           "Click on a prerequisite node in the diagram to see its description here.";
 
@@ -429,7 +434,9 @@
             return "#001F3F"; // Navy
           })
           .attr("stroke-width", (d) => (d.depth === 0 ? 3 : 2.5))
-          .style("cursor", (d) => (!d.children && d.data.id ? "pointer" : "default"));
+          .style("cursor", (d) =>
+            !d.children && d.data.id ? "pointer" : "default"
+          );
 
         // Add text labels - Enhanced styling
         node
