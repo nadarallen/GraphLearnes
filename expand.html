@@ -359,24 +359,29 @@
         const maxDepthY = d3.max(root.descendants(), (d) => d.y);
         const yDepthScale = (height - margin.top - margin.bottom) / maxDepthY;
 
-        // 3. Draw the links (paths)
+        // 3. Draw the links (paths) - Enhanced with animations
         const linkGenerator = d3
           .linkVertical()
           .x((d) => d.x - width / 2 + margin.left) // Maps d.x (spread) to screen X, center-adjusted
           .y((d) => margin.top + d.y * yDepthScale); // Maps d.y (depth) to screen Y, flowing T-to-B
 
-        svg
+        const links = svg
           .append("g")
           .attr("fill", "none")
-          .attr("stroke", "#555")
-          .attr("stroke-opacity", 0.4)
-          .attr("stroke-width", 1.5)
+          .attr("stroke", "#001F3F") // Navy
+          .attr("stroke-opacity", 0.5)
+          .attr("stroke-width", 2.5)
           .selectAll("path")
           .data(root.links())
           .join("path")
-          .attr("d", linkGenerator);
+          .attr("d", linkGenerator)
+          .attr("class", "link")
+          .style("opacity", 0)
+          .transition()
+          .duration(800)
+          .style("opacity", 1);
 
-        // 4. Draw the nodes
+        // 4. Draw the nodes - Enhanced with better styling
         const node = svg
           .append("g")
           .selectAll("g")
@@ -392,33 +397,48 @@
           .attr(
             "class",
             (d) => `node ${d.children ? "node--internal" : "node--leaf"}`
-          );
+          )
+          .style("opacity", 0);
 
-        // Add circles for visual nodes
+        // Add circles for visual nodes - Enhanced with new colors
         node
           .append("circle")
-          .attr("r", 5)
-          .attr("fill", (d) =>
-            d.depth === 0 ? "#90caf9" : d.children ? "#555" : "#90caf9"
-          )
-          .attr("stroke", (d) =>
-            d.depth === 0 ? "#2196f3" : d.children ? "#555" : "#2196f3"
-          )
-          .attr("stroke-width", 2);
+          .attr("r", (d) => (d.depth === 0 ? 10 : d.children ? 8 : 7))
+          .attr("fill", (d) => {
+            if (d.depth === 0) return "#001F3F"; // Navy for root
+            if (d.children) return "#001F3F"; // Navy for internal
+            return "#89CFF0"; // Baby blue for leaves
+          })
+          .attr("stroke", (d) => {
+            if (d.depth === 0) return "#C3B091"; // Khaki accent
+            if (d.children) return "#89CFF0"; // Baby blue
+            return "#001F3F"; // Navy
+          })
+          .attr("stroke-width", (d) => (d.depth === 0 ? 3 : 2.5))
+          .style("cursor", (d) => (!d.children && d.data.id ? "pointer" : "default"));
 
-        // Add text labels
+        // Add text labels - Enhanced styling
         node
           .append("text")
           .attr("dy", "0.31em")
-          .attr("y", (d) => (d.children ? -25 : 25)) // Root text goes above, Leaf text goes below
+          .attr("y", (d) => (d.children ? -30 : 30)) // Root text goes above, Leaf text goes below
           .attr("text-anchor", "middle") // Center text horizontally
           .text((d) => d.data.name)
-          .style("font-size", "10px")
+          .style("font-size", (d) => (d.depth === 0 ? "13px" : "11px"))
+          .style("font-weight", (d) => (d.depth === 0 ? "700" : "600"))
+          .style("fill", (d) => (d.depth === 0 ? "#FFFFFF" : "#001F3F"))
           .clone(true)
           .lower()
           .attr("stroke-linejoin", "round")
-          .attr("stroke-width", 3)
-          .attr("stroke", "white");
+          .attr("stroke-width", (d) => (d.depth === 0 ? "4" : "3"))
+          .attr("stroke", (d) => (d.depth === 0 ? "#001F3F" : "#FFFFFF"));
+
+        // Apply fade-in animation after elements are created
+        node
+          .transition()
+          .duration(600)
+          .delay((d, i) => i * 50)
+          .style("opacity", 1);
 
         // Add click handler to leaf nodes (prerequisites)
         node
