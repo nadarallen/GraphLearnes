@@ -31,12 +31,22 @@
         </p>
       </div>
 
-      <div id="prereq-description-display" style="display: none">
-        <h4>Prerequisite Description:</h4>
-        <p id="current-prereq-description">
-          Click on a prerequisite box in the diagram to see its description
-          here.
-        </p>
+      <div id="description-container" style="display: none">
+        <!-- Topic Summary Box -->
+        <div id="topic-summary-display">
+          <h4>Topic Summary:</h4>
+          <p id="current-topic-summary">
+            Select a topic to see its summary here.
+          </p>
+        </div>
+
+        <!-- Prerequisite Description Box -->
+        <div id="prereq-description-display">
+          <h4>Prerequisite Description:</h4>
+          <p id="current-prereq-description">
+            Click on a prerequisite node in the diagram to see its description here.
+          </p>
+        </div>
       </div>
     </div>
 
@@ -292,24 +302,28 @@
         const diagramPlaceholder = document.getElementById(
           "diagram-placeholder"
         );
-        const prereqDescDisplay = document.getElementById(
-          "prereq-description-display"
-        );
-        const currentPrereqDesc = document.getElementById(
-          "current-prereq-description"
-        );
+        const descriptionContainer = document.getElementById("description-container");
 
         if (!topic) {
           diagramPlaceholder.innerHTML = "<p>Topic not found.</p>";
-          prereqDescDisplay.style.display = "none";
+          if (descriptionContainer) {
+            descriptionContainer.style.display = "none";
+          }
           return;
         }
 
         // Clear the placeholder and show the description area
         diagramPlaceholder.innerHTML = "";
-        prereqDescDisplay.style.display = "block";
+        descriptionContainer.style.display = "block";
+        
+        // Update topic summary
+        const topicSummary = document.getElementById("current-topic-summary");
+        topicSummary.textContent = topic.longDescription;
+        
+        // Reset prerequisite description
+        const currentPrereqDesc = document.getElementById("current-prereq-description");
         currentPrereqDesc.textContent =
-          "Click on a node in the D3 diagram to see its prerequisite description here.";
+          "Click on a prerequisite node in the diagram to see its description here.";
 
         // --- Prepare data for D3 ---
         // Convert the topic and its prerequisites into a hierarchical structure
@@ -456,14 +470,11 @@
         );
 
         if (selectedPrereq) {
-          const prereqDescDisplay = document.getElementById(
-            "prereq-description-display"
-          );
           const currentPrereqDesc = document.getElementById(
             "current-prereq-description"
           );
 
-          prereqDescDisplay.style.display = "block"; // Ensure it's visible
+          // Update prerequisite description
           currentPrereqDesc.innerHTML = `<strong>${selectedPrereq.title}:</strong> ${selectedPrereq.description}`;
         }
       }
