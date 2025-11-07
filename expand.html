@@ -327,12 +327,12 @@
         renderD3Tree(d3Data, diagramPlaceholder.id, topic.prerequisites);
       }
 
-      // 4. D3 RENDERING FUNCTION (Adapted for 90-degree anti-clockwise rotation)
+      // 4. D3 RENDERING FUNCTION (Rotated 90 degrees anticlockwise - Top to Bottom)
       function renderD3Tree(data, containerId, prerequisites) {
         const container = document.getElementById(containerId);
         const width = container.clientWidth;
         const height = container.clientHeight;
-        const margin = { top: 0, right: 250, bottom: 30, left: 80 };
+        const margin = { top: 80, right: 30, bottom: 80, left: 30 };
 
         // 1. Create the SVG container
         const svg = d3
@@ -340,42 +340,30 @@
           .append("svg")
           .attr("width", width)
           .attr("height", height)
-          // Center the view vertically
-          .attr("viewBox", [-margin.left, -height / 2, width, height]);
+          // Center the view horizontally
+          .attr("viewBox", [-width / 2, 0, width, height]);
 
         // 2. Compute the tree layout
         const treeLayout = d3
           .tree()
-          // --- KEY CHANGE 1: Swap width and height for horizontal layout ---
+          // Set size for vertical layout (top to bottom)
           .size([
-            height - margin.top - margin.bottom, // The height becomes the domain/spread (X-axis)
-            width - margin.left - margin.right, // The width becomes the depth (Y-axis)
+            width - margin.left - margin.right, // The width becomes the domain/spread (X-axis)
+            height - margin.top - margin.bottom, // The height becomes the depth (Y-axis)
           ]);
 
         const root = d3.hierarchy(data);
         treeLayout(root);
 
-        // --- KEY CHANGE 2: Adjust node positions for R-to-L flow ---
-        // R-to-L means: root starts on the right (max X), children extend to the left (min X)
-        // D3 tree layout calculates (x, y) for T-to-B.
-        // We swap: new_x = d.y, new_y = d.x
-        // We negate the new_x to make it flow from Right-to-Left: new_x = width - d.y - margin.right
-
-        // Find max depth (needed for scaling the layout)
-        const maxDepth = d3.max(root.descendants(), (d) => d.depth);
+        // Find max depth for scaling
         const maxDepthY = d3.max(root.descendants(), (d) => d.y);
-
-        // Calculate a scaling factor to fit the width properly
-        const xDepthScale = (width - margin.left - margin.right) / maxDepthY;
+        const yDepthScale = (height - margin.top - margin.bottom) / maxDepthY;
 
         // 3. Draw the links (paths)
-        // --- KEY CHANGE 3: Use linkHorizontal for X-Y swapped layout ---
         const linkGenerator = d3
-          .linkHorizontal()
-          // X is now the depth (d.y)
-          // Y is now the domain spread (d.x)
-          .x((d) => width - margin.right - d.y * xDepthScale) // Maps d.y (depth) to screen X, flowing R-to-L
-          .y((d) => d.x - height / 2 + margin.top); // Maps d.x (spread) to screen Y, center-adjusted
+          .linkVertical()
+          .x((d) => d.x - width / 2 + margin.left) // Maps d.x (spread) to screen X, center-adjusted
+          .y((d) => margin.top + d.y * yDepthScale); // Maps d.y (depth) to screen Y, flowing T-to-B
 
         svg
           .append("g")
@@ -394,12 +382,11 @@
           .selectAll("g")
           .data(root.descendants())
           .join("g")
-          // --- KEY CHANGE 4: Translate based on swapped and adjusted coordinates ---
           .attr(
             "transform",
             (d) =>
-              `translate(${width - margin.right - d.y * xDepthScale},${
-                d.x - height / 2 + margin.top
+              `translate(${d.x - width / 2 + margin.left},${
+                margin.top + d.y * yDepthScale
               })`
           )
           .attr(
@@ -407,7 +394,7 @@
             (d) => `node ${d.children ? "node--internal" : "node--leaf"}`
           );
 
-        // Add circles for visual nodes (No change here)
+        // Add circles for visual nodes
         node
           .append("circle")
           .attr("r", 5)
@@ -423,17 +410,17 @@
         node
           .append("text")
           .attr("dy", "0.31em")
-          // --- KEY CHANGE 5: Adjust text position for R-to-L (Root text goes left, Leaf text goes right) ---
-          .attr("x", (d) => (d.children ? 8 : -8)) // Root text is now on the left (x=8), Leaf text is on the right (x=-8)
-          .attr("text-anchor", (d) => (d.children ? "start" : "end")) // Root text starts right of node, Leaf text ends left of node
+          .attr("y", (d) => (d.children ? -25 : 25)) // Root text goes above, Leaf text goes below
+          .attr("text-anchor", "middle") // Center text horizontally
           .text((d) => d.data.name)
+          .style("font-size", "10px")
           .clone(true)
           .lower()
           .attr("stroke-linejoin", "round")
           .attr("stroke-width", 3)
           .attr("stroke", "white");
 
-        // Add click handler to leaf nodes (prerequisites) (No change here)
+        // Add click handler to leaf nodes (prerequisites)
         node
           .filter((d) => !d.children && d.data.id)
           .attr("cursor", "pointer")

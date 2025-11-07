@@ -11,7 +11,7 @@ const dbConfig = {
   host: "localhost",
   user: "root",
   password: "Iloveballs@2014",
-  port: 3306, //balls
+  port: 5500, //balls
   database: "datastructures_db",
 };
 
