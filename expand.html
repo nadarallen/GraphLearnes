@@ -3,162 +3,300 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Data Structures Topics - Prereq Description (D3 Integration)</title>
-    <link rel="stylesheet" href="expand.css" />
-    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <title>Data Structures Canvas Visualization</title>
+
+    <!-- Import D3.js (Required for physics forces) -->
+    <script src="https://unpkg.com/d3"></script>
+    <!-- Import 2D Force Graph -->
+    <script src="https://unpkg.com/force-graph"></script>
+
+    <style>
+      /* --- Color Palette --- */
+      :root {
+        --bg-dark: #050510;
+        --panel-bg: rgba(5, 20, 40, 0.9);
+        --panel-border: rgba(137, 207, 240, 0.3);
+        --text-main: #e0e0e0;
+        --accent-blue: #89cff0;
+        --accent-gold: #ffd700;
+      }
+
+      body {
+        font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        margin: 0;
+        background-color: var(--bg-dark);
+        color: var(--text-main);
+        overflow: hidden;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* --- Header --- */
+      header {
+        padding: 15px 30px;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--panel-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        z-index: 10;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 1.4rem;
+        color: var(--accent-blue);
+        letter-spacing: 1px;
+      }
+
+      .button {
+        background: transparent;
+        border: 1px solid var(--accent-blue);
+        color: var(--accent-blue);
+        padding: 6px 16px;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-decoration: none;
+        font-size: 0.85rem;
+      }
+
+      .button:hover {
+        background: var(--accent-blue);
+        color: var(--bg-dark);
+      }
+
+      /* --- Navigation --- */
+      #topics-nav {
+        background: rgba(0, 31, 63, 0.3);
+        padding: 10px 20px;
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        white-space: nowrap;
+        border-bottom: 1px solid #222;
+        z-index: 10;
+      }
+
+      #topics-nav::-webkit-scrollbar {
+        height: 3px;
+      }
+      #topics-nav::-webkit-scrollbar-thumb {
+        background: var(--accent-blue);
+      }
+
+      .nav-item {
+        background: rgba(255, 255, 255, 0.05);
+        color: #aaa;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-size: 0.9rem;
+        border: 1px solid transparent;
+      }
+
+      .nav-item:hover {
+        color: #fff;
+        background: rgba(137, 207, 240, 0.1);
+        border-color: var(--accent-blue);
+      }
+
+      .nav-item.active {
+        color: var(--bg-dark);
+        background: var(--accent-blue);
+        font-weight: bold;
+        box-shadow: 0 0 12px rgba(137, 207, 240, 0.3);
+      }
+
+      /* --- Main Layout --- */
+      #main-container {
+        flex: 1;
+        position: relative;
+        display: flex;
+        overflow: hidden;
+      }
+
+      /* --- Canvas Container --- */
+      #graph-canvas {
+        flex: 1;
+        background: radial-gradient(circle at center, #0a0a20 0%, #000000 100%);
+        cursor: grab;
+      }
+      #graph-canvas:active {
+        cursor: grabbing;
+      }
+
+      /* --- Info Panel --- */
+      #info-panel {
+        position: absolute;
+        right: 20px;
+        top: 20px;
+        width: 320px;
+        background: var(--panel-bg);
+        backdrop-filter: blur(12px);
+        border-left: 3px solid var(--accent-blue);
+        border-radius: 8px;
+        padding: 25px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+        transform: translateX(400px);
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        z-index: 20;
+      }
+
+      #info-panel.visible {
+        transform: translateX(0);
+      }
+
+      #info-panel h4 {
+        color: var(--accent-blue);
+        margin: 0 0 10px 0;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+      }
+
+      #info-panel h2 {
+        margin: 0 0 15px 0;
+        color: var(--accent-gold);
+        font-size: 1.3rem;
+        line-height: 1.3;
+      }
+
+      #info-panel p {
+        line-height: 1.6;
+        font-size: 0.9rem;
+        color: #ccc;
+        margin: 0;
+      }
+
+      /* --- Overlay Text --- */
+      .instruction-overlay {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        font-family: monospace;
+        color: #666;
+        font-size: 0.8rem;
+        pointer-events: none;
+      }
+    </style>
   </head>
   <body>
-    <h1>
-      <div class="button-container">
-        <a href="home.html"
-          ><button class="button">
-            <span>Back </span>
-          </button></a
-        >
-        <span>Data Structures</span>
-      </div>
-    </h1>
+    <header>
+      <h1>
+        Data Structures
+        <span style="font-size: 0.7em; color: #666">// Interactive Canvas</span>
+      </h1>
+      <a href="home.html" class="button">← Back</a>
+    </header>
 
-    <nav id="topics-nav">
-      <ul></ul>
-    </nav>
+    <nav id="topics-nav"></nav>
 
-    <div id="main-content-area">
-      <div id="diagram-placeholder">
-        <p>
-          Select a main topic from the list above to see its prerequisites
-          diagram.
-        </p>
+    <div id="main-container">
+      <div id="graph-canvas"></div>
+
+      <div class="instruction-overlay">
+        > Drag to pan • Scroll to zoom • Drag nodes to rearrange
       </div>
 
-      <div id="description-container" style="display: none">
-        <!-- Topic Summary Box -->
-        <div id="topic-summary-display">
-          <h4>Topic Summary:</h4>
-          <p id="current-topic-summary">
-            Select a topic to see its summary here.
-          </p>
-        </div>
-
-        <!-- Prerequisite Description Box -->
-        <div id="prereq-description-display">
-          <h4>Prerequisite Description:</h4>
-          <p id="current-prereq-description">
-            Click on a prerequisite node in the diagram to see its description
-            here.
-          </p>
-        </div>
+      <div id="info-panel">
+        <h4 id="panel-label">Summary</h4>
+        <h2 id="panel-title">Topic Details</h2>
+        <p id="panel-desc">Select a node to view details.</p>
       </div>
     </div>
 
     <script>
-      // 1. DATA STRUCTURE (Topics, Descriptions, and Prerequisites with their own descriptions)
+      // 1. DATA DEFINITION
       const dsModules = [
         {
           id: "ds-intro",
-          title: "01. Introduction to Data Structures",
+          title: "01. Intro to DS",
           longDescription:
-            "This module covers the fundamentals: what a data structure is, why we need them, and how to analyze their efficiency using Big O notation. It also reviews basic concepts like memory allocation and simple data types.",
+            "Foundations of data organization. Covers Big O notation, time/space complexity analysis, and basic memory allocation strategies.",
+          color: "#ff0055",
           prerequisites: [
             {
-              id: "prereq-basic-prog",
+              id: "p1",
               title: "Basic Programming",
               description:
-                "Understanding of fundamental programming concepts in languages like C, C++, or Java (variables, operators, control flow).",
-              order: 1,
+                "Control flow (if/else), loops, and syntax in C/Java/Python.",
             },
             {
-              id: "prereq-data-types",
-              title: "Data Types & Variables",
-              description:
-                "Knowledge of basic data types (int, float, char, boolean) and how to declare and use variables.",
-              order: 2,
+              id: "p2",
+              title: "Data Types",
+              description: "Primitives: int, float, char, boolean.",
             },
             {
-              id: "prereq-arrays",
+              id: "p3",
               title: "Arrays",
-              description:
-                "Familiarity with arrays: declaration, initialization, accessing elements, and basic operations.",
-              order: 3,
+              description: "Contiguous memory allocation and indexing.",
             },
             {
-              id: "prereq-loops-funcs",
-              title: "Loops & Functions",
-              description:
-                "Proficiency in using loops (for, while) and defining/calling functions to structure code.",
-              order: 4,
+              id: "p4",
+              title: "Loops",
+              description: "Iterative logic construction.",
             },
           ],
         },
         {
-          id: "ds-stacks-queues",
-          title: "02. Stacks and Queues",
+          id: "ds-stacks",
+          title: "02. Stacks & Queues",
           longDescription:
-            "Learn about two fundamental linear data structures: Stacks (LIFO) and Queues (FIFO). This topic explores their operations (Push/Pop, Enqueue/Dequeue), typical use cases like function calls, and array-based or linked list implementations.",
+            "Linear data structures. Stack (LIFO) used in recursion/undo. Queue (FIFO) used in scheduling/buffering.",
+          color: "#00cc88",
           prerequisites: [
             {
-              id: "prereq-arrays",
+              id: "p3",
               title: "Arrays",
-              description:
-                "Familiarity with arrays: declaration, initialization, accessing elements, and basic operations.",
-              order: 1,
+              description: "Used for static implementation of stacks.",
             },
             {
-              id: "prereq-funcs-modular",
-              title: "Functions & Modular Code",
-              description:
-                "Ability to write reusable functions and organize code into logical modules.",
-              order: 2,
+              id: "p5",
+              title: "Functions",
+              description: "Modularizing Push, Pop, and Peek operations.",
             },
             {
-              id: "prereq-expr-eval",
-              title: "Expression Evaluation",
-              description:
-                "Basic understanding of how expressions are evaluated, useful for infix/postfix conversions.",
-              order: 3,
+              id: "p6",
+              title: "Expressions",
+              description: "Infix, Prefix, Postfix conversion logic.",
             },
             {
-              id: "prereq-adt",
-              title: "Basic ADT",
-              description:
-                "An introductory understanding of Abstract Data Types (ADT) concept.",
-              order: 4,
+              id: "p7",
+              title: "ADT",
+              description: "Abstract Data Types concept.",
             },
           ],
         },
         {
-          id: "ds-linked-lists",
+          id: "ds-linked",
           title: "03. Linked Lists",
           longDescription:
-            "This chapter introduces dynamic data structures where elements are linked using pointers. You will study single, double, and circular linked lists, focusing on operations like insertion, deletion, and traversal, and dynamic memory management.",
+            "Nodes linked via pointers. Allows dynamic memory usage. Includes Singly, Doubly, and Circular lists.",
+          color: "#22aaff",
           prerequisites: [
             {
-              id: "prereq-pointers",
+              id: "p8",
               title: "Pointers",
-              description:
-                "Core understanding of pointers, memory addresses, and pointer arithmetic.",
-              order: 1,
+              description: "Memory addressing and dereferencing.",
             },
             {
-              id: "prereq-dynamic-mem",
+              id: "p9",
               title: "Dynamic Memory",
-              description:
-                "Knowledge of dynamic memory allocation and deallocation (malloc/free in C/C++, new/delete in C++).",
-              order: 2,
+              description: "Heap allocation (malloc/new).",
             },
             {
-              id: "prereq-structs",
-              title: "Structures/Classes",
-              description:
-                "Familiarity with defining and using structures or classes to group related data.",
-              order: 3,
+              id: "p10",
+              title: "Structs",
+              description: "Creating custom data types for Nodes.",
             },
             {
-              id: "prereq-array-vs-ptr",
-              title: "Array vs Pointer Concepts",
-              description:
-                "Understanding the differences and relationships between arrays and pointers.",
-              order: 4,
+              id: "p11",
+              title: "Memory Layout",
+              description: "Understanding non-contiguous memory.",
             },
           ],
         },
@@ -166,35 +304,29 @@
           id: "ds-trees",
           title: "04. Trees",
           longDescription:
-            "Explore non-linear structures starting with binary trees and binary search trees (BSTs). Key concepts include various traversal methods (Inorder, Preorder, Postorder) and balancing techniques for efficient search and retrieval operations.",
+            "Hierarchical structures. Binary Trees, BST, AVL. Essential for fast searching and sorting data.",
+          color: "#ffaa00",
           prerequisites: [
             {
-              id: "prereq-linked-list-concepts",
-              title: "Linked List Concepts",
+              id: "p12",
+              title: "Linked Lists",
               description:
-                "Solid understanding of linked list operations and node manipulation.",
-              order: 1,
+                "Tree nodes are essentially linked list nodes with multiple pointers.",
             },
             {
-              id: "prereq-recursion",
+              id: "p13",
               title: "Recursion",
-              description:
-                "Ability to write and understand recursive functions.",
-              order: 2,
+              description: "The primary method for traversing trees.",
             },
             {
-              id: "prereq-stack-logic",
-              title: "Stack (for Traversal)",
-              description:
-                "Knowledge of stacks for iterative tree traversal algorithms.",
-              order: 3,
+              id: "p14",
+              title: "Stack",
+              description: "Used for iterative traversals (DFS).",
             },
             {
-              id: "prereq-binary-search-basics",
-              title: "Binary Search Basics",
-              description:
-                "Understanding the principles of binary search on sorted data.",
-              order: 4,
+              id: "p15",
+              title: "Binary Search",
+              description: "The logic behind BST efficiency.",
             },
           ],
         },
@@ -202,297 +334,253 @@
           id: "ds-graphs",
           title: "05. Graphs",
           longDescription:
-            "Graphs are flexible structures used to model networks and relationships. This module covers graph representations (adjacency matrix/list) and critical algorithms like Breadth-First Search (BFS), Depth-First Search (DFS), and finding shortest paths.",
+            "Complex networks (Social media, Maps). Nodes (Vertices) and Edges. Algorithms: BFS, DFS, Dijkstra.",
+          color: "#9900ff",
           prerequisites: [
             {
-              id: "prereq-tree-traversal",
-              title: "Tree Traversal (DFS/BFS)",
+              id: "p16",
+              title: "Tree Traversal",
               description:
-                "Familiarity with depth-first and breadth-first search algorithms on trees.",
-              order: 1,
+                "Graph traversal is a generalization of tree traversal.",
             },
             {
-              id: "prereq-stack-queue",
-              title: "Stack & Queue",
-              description:
-                "Proficiency in using both stack and queue data structures.",
-              order: 2,
+              id: "p17",
+              title: "Queue & Stack",
+              description: "BFS uses Queue, DFS uses Stack.",
             },
             {
-              id: "prereq-2d-arrays",
-              title: "2D Arrays (Adj. Matrix)",
-              description:
-                "Understanding of 2-dimensional arrays for representing matrices, e.g., adjacency matrices.",
-              order: 3,
+              id: "p18",
+              title: "Matrices",
+              description: "Adjacency Matrix representation.",
             },
             {
-              id: "prereq-recursion",
+              id: "p13",
               title: "Recursion",
-              description:
-                "Ability to write and understand recursive functions for graph algorithms.",
-              order: 4,
+              description: "Deep traversal logic.",
             },
           ],
         },
         {
-          id: "ds-searching-techniques",
-          title: "06. Searching Techniques",
+          id: "ds-search",
+          title: "06. Searching",
           longDescription:
-            "Focuses on methods for quickly locating an item within a data structure. Topics include the efficiency of Linear Search versus Binary Search, as well as an introduction to Hashing for near-constant time lookups.",
+            "Finding data efficiently. Linear Search (O(n)) vs Binary Search (O(log n)) vs Hashing (O(1)).",
+          color: "#00ccff",
           prerequisites: [
             {
-              id: "prereq-arrays",
+              id: "p3",
               title: "Arrays",
-              description:
-                "Strong understanding of array manipulation and indexing.",
-              order: 1,
+              description: "The dataset structure.",
             },
             {
-              id: "prereq-linear-binary-search",
-              title: "Linear & Binary Search",
-              description:
-                "Knowledge of linear and binary search algorithms and their complexities.",
-              order: 2,
+              id: "p15",
+              title: "Algorithms",
+              description: "Step-by-step logic execution.",
             },
             {
-              id: "prereq-modulo-op",
-              title: "Modulo Operation (Hashing)",
-              description:
-                "Understanding of the modulo operator and its application in hashing.",
-              order: 3,
+              id: "p19",
+              title: "Math (Modulo)",
+              description: "Key for Hash Function design.",
             },
             {
-              id: "prereq-funcs-logic",
-              title: "Functions & Logic Building",
-              description:
-                "Ability to design and implement functions and develop logical problem-solving skills.",
-              order: 4,
+              id: "p20",
+              title: "Logic",
+              description: "Optimizing for edge cases.",
             },
           ],
         },
       ];
 
-      let currentSelectedTopicId = null;
+      // 2. SETUP VARIABLES
+      let Graph;
+      const container = document.getElementById("graph-canvas");
 
-      // 2. FUNCTION TO RENDER THE MAIN TOPICS NAVIGATION
-      function renderMainTopicsNav() {
-        const navList = document.querySelector("#topics-nav ul");
-        navList.innerHTML = "";
-
-        dsModules.forEach((module) => {
-          const li = document.createElement("li");
-          const link = document.createElement("a");
-
-          link.textContent = module.title;
-          link.href = "#";
-          link.dataset.moduleId = module.id;
-          link.addEventListener("click", (e) => {
-            e.preventDefault();
-            displayTopicDiagram(module.id);
-          });
-
-          li.appendChild(link);
-          navList.appendChild(li);
-        });
-      }
-
-      // 3. FUNCTION TO DISPLAY THE DIAGRAM FOR A SELECTED MAIN TOPIC (NOW USING D3)
-      function displayTopicDiagram(moduleId) {
-        currentSelectedTopicId = moduleId;
-        const topic = dsModules.find((m) => m.id === moduleId);
-        const diagramPlaceholder = document.getElementById(
-          "diagram-placeholder"
-        );
-        const descriptionContainer = document.getElementById(
-          "description-container"
-        );
-
-        if (!topic) {
-          diagramPlaceholder.innerHTML = "<p>Topic not found.</p>";
-          if (descriptionContainer) {
-            descriptionContainer.style.display = "none";
-          }
-          return;
-        }
-
-        // Clear the placeholder and show the description area
-        diagramPlaceholder.innerHTML = "";
-        descriptionContainer.style.display = "block";
-
-        // Update topic summary
-        const topicSummary = document.getElementById("current-topic-summary");
-        topicSummary.textContent = topic.longDescription;
-
-        // Reset prerequisite description
-        const currentPrereqDesc = document.getElementById(
-          "current-prereq-description"
-        );
-        currentPrereqDesc.textContent =
-          "Click on a prerequisite node in the diagram to see its description here.";
-
-        // --- Prepare data for D3 ---
-        // Convert the topic and its prerequisites into a hierarchical structure
-        const d3Data = {
-          name: topic.title,
-          description: topic.longDescription,
-          children: topic.prerequisites.map((p) => ({
-            name: p.title,
-            description: p.description,
-            id: p.id, // Keep ID for potential click events
-          })),
-        };
-
-        // Render the D3 tree
-        renderD3Tree(d3Data, diagramPlaceholder.id, topic.prerequisites);
-      }
-
-      // 4. D3 RENDERING FUNCTION (Rotated 90 degrees anticlockwise - Top to Bottom)
-      function renderD3Tree(data, containerId, prerequisites) {
-        const container = document.getElementById(containerId);
-        const width = container.clientWidth;
-        const height = container.clientHeight;
-        const margin = { top: 80, right: 30, bottom: 80, left: 30 };
-
-        // 1. Create the SVG container
-        const svg = d3
-          .select(`#${containerId}`)
-          .append("svg")
-          .attr("width", width)
-          .attr("height", height)
-          // Center the view horizontally
-          .attr("viewBox", [-width / 2, 0, width, height]);
-
-        // 2. Compute the tree layout
-        const treeLayout = d3
-          .tree()
-          // Set size for vertical layout (top to bottom)
-          .size([
-            width - margin.left - margin.right, // The width becomes the domain/spread (X-axis)
-            height - margin.top - margin.bottom, // The height becomes the depth (Y-axis)
-          ]);
-
-        const root = d3.hierarchy(data);
-        treeLayout(root);
-
-        // Find max depth for scaling
-        const maxDepthY = d3.max(root.descendants(), (d) => d.y);
-        const yDepthScale = (height - margin.top - margin.bottom) / maxDepthY;
-
-        // 3. Draw the links (paths) - Enhanced with animations
-        const linkGenerator = d3
-          .linkVertical()
-          .x((d) => d.x - width / 2 + margin.left) // Maps d.x (spread) to screen X, center-adjusted
-          .y((d) => margin.top + d.y * yDepthScale); // Maps d.y (depth) to screen Y, flowing T-to-B
-
-        const links = svg
-          .append("g")
-          .attr("fill", "none")
-          .attr("stroke", "#001F3F") // Navy
-          .attr("stroke-opacity", 0.5)
-          .attr("stroke-width", 2.5)
-          .selectAll("path")
-          .data(root.links())
-          .join("path")
-          .attr("d", linkGenerator)
-          .attr("class", "link")
-          .style("opacity", 0)
-          .transition()
-          .duration(800)
-          .style("opacity", 1);
-
-        // 4. Draw the nodes - Enhanced with better styling
-        const node = svg
-          .append("g")
-          .selectAll("g")
-          .data(root.descendants())
-          .join("g")
-          .attr(
-            "transform",
-            (d) =>
-              `translate(${d.x - width / 2 + margin.left},${
-                margin.top + d.y * yDepthScale
-              })`
-          )
-          .attr(
-            "class",
-            (d) => `node ${d.children ? "node--internal" : "node--leaf"}`
-          )
-          .style("opacity", 0);
-
-        // Add circles for visual nodes - Enhanced with new colors
-        node
-          .append("circle")
-          .attr("r", (d) => (d.depth === 0 ? 10 : d.children ? 8 : 7))
-          .attr("fill", (d) => {
-            if (d.depth === 0) return "#001F3F"; // Navy for root
-            if (d.children) return "#001F3F"; // Navy for internal
-            return "#89CFF0"; // Baby blue for leaves
-          })
-          .attr("stroke", (d) => {
-            if (d.depth === 0) return "#C3B091"; // Khaki accent
-            if (d.children) return "#89CFF0"; // Baby blue
-            return "#001F3F"; // Navy
-          })
-          .attr("stroke-width", (d) => (d.depth === 0 ? 3 : 2.5))
-          .style("cursor", (d) =>
-            !d.children && d.data.id ? "pointer" : "default"
-          );
-
-        // Add text labels - Enhanced styling
-        node
-          .append("text")
-          .attr("dy", "0.31em")
-          .attr("y", (d) => (d.children ? -30 : 30)) // Root text goes above, Leaf text goes below
-          .attr("text-anchor", "middle") // Center text horizontally
-          .text((d) => d.data.name)
-          .style("font-size", (d) => (d.depth === 0 ? "13px" : "11px"))
-          .style("font-weight", (d) => (d.depth === 0 ? "700" : "600"))
-          .style("fill", (d) => (d.depth === 0 ? "#FFFFFF" : "#001F3F"))
-          .clone(true)
-          .lower()
-          .attr("stroke-linejoin", "round")
-          .attr("stroke-width", (d) => (d.depth === 0 ? "4" : "3"))
-          .attr("stroke", (d) => (d.depth === 0 ? "#001F3F" : "#FFFFFF"));
-
-        // Apply fade-in animation after elements are created
-        node
-          .transition()
-          .duration(600)
-          .delay((d, i) => i * 50)
-          .style("opacity", 1);
-
-        // Add click handler to leaf nodes (prerequisites)
-        node
-          .filter((d) => !d.children && d.data.id)
-          .attr("cursor", "pointer")
-          .on("click", (event, d) => {
-            handleD3PrereqClick(d.data.id, prerequisites);
-          });
-      }
-
-      // 5. FUNCTION TO HANDLE CLICK ON A D3 PREREQUISITE NODE
-      function handleD3PrereqClick(prereqId, currentPrerequisites) {
-        const selectedPrereq = currentPrerequisites.find(
-          (p) => p.id === prereqId
-        );
-
-        if (selectedPrereq) {
-          const currentPrereqDesc = document.getElementById(
-            "current-prereq-description"
-          );
-
-          // Update prerequisite description
-          currentPrereqDesc.innerHTML = `<strong>${selectedPrereq.title}:</strong> ${selectedPrereq.description}`;
-        }
-      }
-
-      // Initialize the page
+      // 3. INITIALIZATION
       document.addEventListener("DOMContentLoaded", () => {
-        renderMainTopicsNav();
-        // Optionally display the first topic's diagram by default
-        if (dsModules.length > 0) {
-          displayTopicDiagram(dsModules[0].id);
+        renderNav();
+        // Check if ForceGraph is loaded, if not retry after short delay
+        if (typeof ForceGraph !== "undefined") {
+          loadModuleGraph(dsModules[0].id);
+        } else {
+          setTimeout(() => {
+            if (typeof ForceGraph !== "undefined") {
+              loadModuleGraph(dsModules[0].id);
+            } else {
+              console.error("ForceGraph library failed to load.");
+            }
+          }, 500);
         }
+      });
+
+      // 4. NAVIGATION RENDERER
+      function renderNav() {
+        const nav = document.getElementById("topics-nav");
+        dsModules.forEach((mod) => {
+          const div = document.createElement("div");
+          div.className = "nav-item";
+          div.textContent = mod.title;
+          div.onclick = () => {
+            document
+              .querySelectorAll(".nav-item")
+              .forEach((el) => el.classList.remove("active"));
+            div.classList.add("active");
+            loadModuleGraph(mod.id);
+          };
+          nav.appendChild(div);
+        });
+        nav.children[0].classList.add("active");
+      }
+
+      // 5. PANEL UPDATER
+      function updatePanel(title, desc, type, color) {
+        const panel = document.getElementById("info-panel");
+        const lbl = document.getElementById("panel-label");
+        const h2 = document.getElementById("panel-title");
+        const p = document.getElementById("panel-desc");
+
+        panel.classList.add("visible");
+        panel.style.borderLeftColor = color || "#89cff0";
+
+        lbl.textContent = type === "MAIN" ? "MAIN MODULE" : "PREREQUISITE";
+        lbl.style.color = color || "#89cff0";
+
+        h2.textContent = title;
+        p.textContent = desc;
+      }
+
+      // 6. GRAPH ENGINE (CANVAS)
+      function loadModuleGraph(moduleId) {
+        const module = dsModules.find((m) => m.id === moduleId);
+        if (!module) return;
+
+        updatePanel(module.title, module.longDescription, "MAIN", module.color);
+
+        // Prepare Data
+        const nodes = [
+          {
+            id: module.id,
+            name: module.title,
+            desc: module.longDescription,
+            group: "main",
+            color: module.color,
+            val: 25, // Main node size
+          },
+        ];
+
+        const links = [];
+        module.prerequisites.forEach((prereq) => {
+          nodes.push({
+            id: prereq.id,
+            name: prereq.title,
+            desc: prereq.description,
+            group: "prereq",
+            color: "#ffffff",
+            val: 10, // Child node size
+          });
+
+          links.push({
+            source: module.id,
+            target: prereq.id,
+          });
+        });
+
+        const gData = { nodes, links };
+
+        // Initialize or Update Graph
+        if (!Graph) {
+          // Double check D3 availability for forces
+          const chargeForce =
+            typeof d3 !== "undefined"
+              ? d3.forceManyBody().strength(-200)
+              : null;
+          const linkForce =
+            typeof d3 !== "undefined" ? d3.forceLink().distance(150) : null;
+
+          Graph = ForceGraph()(container)
+            .backgroundColor("#00000000") // Transparent, letting CSS bg show
+
+            // --- INTERACTION ---
+            .onNodeClick((node) => {
+              Graph.centerAt(node.x, node.y, 1000);
+              Graph.zoom(2, 1000);
+
+              updatePanel(
+                node.name,
+                node.desc,
+                node.group === "main" ? "MAIN" : "PREREQ",
+                node.color === "#ffffff" ? "#89cff0" : node.color
+              );
+            })
+            .onBackgroundClick(() => {
+              Graph.zoomToFit(1000);
+            })
+
+            // --- CANVAS RENDERING ---
+            .nodeCanvasObject((node, ctx, globalScale) => {
+              const label = node.name;
+              const fontSize = (node.group === "main" ? 14 : 12) / globalScale;
+
+              // 1. Draw Outer Glow (Halo)
+              if (node.group === "main") {
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, node.val * 1.2, 0, 2 * Math.PI, false);
+                ctx.fillStyle = "rgba(255,255,255,0.1)";
+                ctx.fill();
+              }
+
+              // 2. Draw Node Circle
+              ctx.beginPath();
+              ctx.arc(node.x, node.y, node.val, 0, 2 * Math.PI, false);
+              ctx.fillStyle = node.color;
+              ctx.shadowBlur = 15;
+              ctx.shadowColor = node.color;
+              ctx.fill();
+
+              // Reset shadow for text
+              ctx.shadowBlur = 0;
+
+              // 3. Draw Text Label
+              ctx.font = `${
+                node.group === "main" ? "bold" : ""
+              } ${fontSize}px Sans-Serif`;
+              ctx.textAlign = "center";
+              ctx.textBaseline = "middle";
+              ctx.fillStyle = "#fff";
+              // Draw text below the node
+              ctx.fillText(label, node.x, node.y + node.val + 8);
+            })
+
+            // --- POINTER AREA (Hitbox) ---
+            .nodePointerAreaPaint((node, color, ctx) => {
+              ctx.fillStyle = color;
+              ctx.beginPath();
+              ctx.arc(node.x, node.y, node.val + 5, 0, 2 * Math.PI, false);
+              ctx.fill();
+            })
+
+            // --- LINKS ---
+            .linkColor(() => "rgba(137, 207, 240, 0.2)")
+            .linkWidth(2)
+            .linkDirectionalParticles(3) // Moving dots
+            .linkDirectionalParticleWidth(3)
+            .linkDirectionalParticleColor(() => "#89cff0");
+
+          // Apply forces if d3 is loaded
+          if (chargeForce) Graph.d3Force("charge", chargeForce);
+          if (linkForce) Graph.d3Force("link", linkForce);
+        }
+
+        // Update Data
+        Graph.graphData(gData);
+
+        // Reset View
+        setTimeout(() => Graph.zoomToFit(600, 50), 200);
+      }
+
+      // Handle resize
+      window.addEventListener("resize", () => {
+        if (Graph)
+          Graph.width(window.innerWidth).height(window.innerHeight - 80);
       });
     </script>
   </body>
