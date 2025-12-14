@@ -3,213 +3,572 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Quiz Result - GraphEdu</title>
-    <link rel="stylesheet" href="result.css" />
+    <title>Quiz Result - GraphEDU</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+      };
+    </script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
     <style>
-      /* ---------------- Score Circle Styles ---------------- */
-      .score-circle {
-        position: relative;
-        width: 200px;
-        height: 200px;
-        margin: 40px auto;
+      body {
+        font-family: "Roboto", sans-serif;
+        margin: 0;
+        /* Background color handled by Tailwind dark classes */
+        overflow-x: hidden;
+        transition: background-color 0.3s ease, color 0.3s ease;
       }
 
-      .score-circle svg {
-        transform: rotate(-90deg);
+      /* 3D Canvas Background */
+      #bg-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: -1;
       }
 
-      .score-circle circle {
-        fill: none;
-        stroke-width: 12;
-        stroke-linecap: round;
+      /* Glassmorphism */
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
+        transition: background-color 0.3s, border-color 0.3s;
       }
 
-      .score-circle .bg {
-        /* Adjusted background to a neutral color, or you can keep red */
-        stroke: #dc3545;
-      }
-
-      .score-circle .progress {
-        stroke: #28a745; /* Progress color (green) */
-        stroke-dasharray: 339.292; /* circumference = 2 * PI * 54 */
-        stroke-dashoffset: 339.292;
-        transition: stroke-dashoffset 1s ease;
-      }
-
-      .score-text {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        font-size: 24px;
-        font-weight: bold;
-      }
-
-      /* ---------------- Review Section ---------------- */
-      .review-container {
-        margin-top: 30px;
-        padding: 15px;
-        border-top: 2px solid #ddd;
+      .dark .glass-panel {
+        background: rgba(30, 41, 59, 0.7); /* Slate-800 */
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
       }
 
       .review-item {
-        margin-bottom: 20px;
-        padding: 15px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        background: #fafafa;
+        transition: all 0.2s ease;
       }
 
-      .review-item.correct {
-        border-left: 6px solid #28a745;
+      .review-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.05);
       }
 
-      /* The 'incorrect' class will now apply to Wrong and Skipped answers */
-      .review-item.wrong,
-      .review-item.skipped {
-        border-left: 6px solid #dc3545;
+      /* Score Circle Animation */
+      .circular-chart {
+        display: block;
+        margin: 0 auto;
+        max-width: 100%;
+        max-height: 250px;
       }
 
-      .review-question {
+      .circle-bg {
+        fill: none;
+        stroke: #e2e8f0;
+        stroke-width: 2.5;
+        transition: stroke 0.3s;
+      }
+      .dark .circle-bg {
+        stroke: #334155;
+      }
+
+      .circle {
+        fill: none;
+        stroke-width: 2.5;
+        stroke-linecap: round;
+        transition: stroke-dasharray 1s ease-out;
+      }
+
+      .percentage {
+        fill: #1e293b;
+        font-family: "Roboto", sans-serif;
         font-weight: bold;
-        margin-bottom: 8px;
+        font-size: 0.5em;
+        text-anchor: middle;
+        transition: fill 0.3s;
+      }
+      .dark .percentage {
+        fill: #f1f5f9;
       }
 
-      .review-answer {
-        margin: 4px 0;
+      .logo-font {
+        font-family: "Product Sans", "Roboto", sans-serif;
       }
 
-      .review-answer span {
-        font-weight: bold;
+      /* Theme Toggle Button */
+      .theme-btn {
+        background: transparent;
+        border: 1px solid #cbd5e1;
+        color: #64748b;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        transition: all 0.3s;
+      }
+      .theme-btn:hover {
+        background: #e2e8f0;
+        color: #1e293b;
+      }
+      .dark .theme-btn {
+        border-color: #475569;
+        color: #94a3b8;
+      }
+      .dark .theme-btn:hover {
+        background: #334155;
+        color: #fff;
+      }
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+      }
+      .dark ::-webkit-scrollbar-thumb {
+        background: #475569;
       }
     </style>
   </head>
-  <body>
-    <div class="result-container">
-      <div class="result-header">
-        <h1>Quiz Result</h1>
-        <p id="quiz-topic">Data Structures</p>
+  <body
+    class="min-h-screen flex flex-col bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100"
+  >
+    <!-- 3D Background -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Header -->
+    <header
+      class="fixed top-0 w-full h-16 z-50 glass-panel flex items-center justify-between px-6 bg-white/80 dark:bg-slate-900/80"
+    >
+      <div class="flex items-center gap-3">
+        <div class="bg-blue-100 dark:bg-blue-900/30 p-1.5 rounded-lg">
+          <i
+            data-lucide="network"
+            class="w-6 h-6 text-blue-600 dark:text-blue-400"
+          ></i>
+        </div>
+        <span
+          class="text-xl font-bold text-slate-800 dark:text-slate-100 logo-font"
+          >Graph<span class="text-blue-600 dark:text-blue-400">Edu</span></span
+        >
       </div>
 
-      <div class="result-summary">
-        <div class="score-circle">
-          <svg width="120" height="120">
-            <circle class="bg" cx="60" cy="60" r="54" />
-            <circle class="progress" cx="60" cy="60" r="54" />
-          </svg>
-          <div class="score-text" id="score-percent">0%</div>
-        </div>
+      <div class="flex items-center gap-4">
+        <button class="theme-btn" id="theme-toggle" onclick="toggleTheme()">
+          ☀ Light
+        </button>
+        <a
+          href="home.html"
+          class="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+        >
+          <i data-lucide="home" class="w-4 h-4"></i>
+          Dashboard
+        </a>
       </div>
+    </header>
 
-      <div class="result-details">
-        <div class="detail-item">
-          <span class="label">Total Questions</span>
-          <span class="value" id="total-questions">0</span>
-        </div>
-        <div class="detail-item correct">
-          <span class="label">Correct Answers</span>
-          <span class="value" id="correct-answers">0</span>
-        </div>
-        <div class="detail-item incorrect">
-          <span class="label">Incorrect Answers</span>
-          <span class="value" id="incorrect-answers">0</span>
-        </div>
-      </div>
+    <!-- Main Content -->
+    <main class="flex-1 flex items-center justify-center p-6 pt-24 pb-10">
+      <div
+        class="glass-panel w-full max-w-4xl rounded-3xl p-8 md:p-10 relative animate-fade-in-up"
+      >
+        <!-- Top Section: Score & Summary -->
+        <div class="flex flex-col md:flex-row items-center gap-10 mb-12">
+          <!-- Left: Score Circle -->
+          <div class="w-48 h-48 relative flex-shrink-0">
+            <svg viewBox="0 0 36 36" class="circular-chart">
+              <path
+                class="circle-bg"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+              <path
+                class="circle"
+                stroke-dasharray="0, 100"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                id="score-circle-path"
+                stroke="#3b82f6"
+              />
+              <text x="18" y="20.35" class="percentage" id="score-text">
+                0%
+              </text>
+            </svg>
+          </div>
 
-      <div class="review-container" id="review-container">
-        <h2>Answer Review</h2>
-      </div>
+          <!-- Right: Stats -->
+          <div class="flex-1 text-center md:text-left">
+            <div class="mb-6">
+              <h2
+                class="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1"
+              >
+                Quiz Completed
+              </h2>
+              <h1
+                class="text-3xl font-bold text-slate-800 dark:text-white logo-font"
+                id="quiz-topic"
+              >
+                Loading...
+              </h1>
+            </div>
 
-      <div class="result-footer">
-        <a href="home.html" class="home-btn">Back to Home</a>
+            <div class="grid grid-cols-3 gap-4">
+              <div
+                class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700"
+              >
+                <div
+                  class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase mb-1"
+                >
+                  Total
+                </div>
+                <div
+                  class="text-2xl font-bold text-slate-800 dark:text-slate-100"
+                  id="total-questions"
+                >
+                  0
+                </div>
+              </div>
+              <div
+                class="bg-green-50 dark:bg-green-900/20 p-4 rounded-2xl border border-green-100 dark:border-green-800/30"
+              >
+                <div
+                  class="text-green-600 dark:text-green-400 text-xs font-bold uppercase mb-1"
+                >
+                  Correct
+                </div>
+                <div
+                  class="text-2xl font-bold text-green-700 dark:text-green-400"
+                  id="correct-answers"
+                >
+                  0
+                </div>
+              </div>
+              <div
+                class="bg-red-50 dark:bg-red-900/20 p-4 rounded-2xl border border-red-100 dark:border-red-800/30"
+              >
+                <div
+                  class="text-red-500 dark:text-red-400 text-xs font-bold uppercase mb-1"
+                >
+                  Incorrect
+                </div>
+                <div
+                  class="text-2xl font-bold text-red-700 dark:text-red-400"
+                  id="incorrect-answers"
+                >
+                  0
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Middle Section: Review -->
+        <div class="border-t border-slate-200 dark:border-slate-700 pt-8">
+          <h3
+            class="text-xl font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2"
+          >
+            <i
+              data-lucide="clipboard-check"
+              class="w-5 h-5 text-blue-600 dark:text-blue-400"
+            ></i>
+            Answer Review
+          </h3>
+
+          <div
+            id="review-container"
+            class="space-y-4 max-h-[500px] overflow-y-auto pr-2"
+          >
+            <!-- Review items will be injected here -->
+            <div class="text-center py-10 text-slate-400">
+              Loading results...
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="mt-10 flex justify-center gap-4">
+          <a
+            href="home.html"
+            class="px-8 py-3 bg-slate-800 dark:bg-blue-600 text-white rounded-xl font-medium hover:bg-slate-900 dark:hover:bg-blue-700 transition-all shadow-lg shadow-slate-800/20 dark:shadow-blue-900/20 flex items-center gap-2"
+          >
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            Return to Dashboard
+          </a>
+        </div>
       </div>
-    </div>
+    </main>
 
     <script>
+      // --- THEME MANAGEMENT ---
+      function initTheme() {
+        const prefersDark =
+          window.matchMedia &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const btn = document.getElementById("theme-toggle");
+
+        if (prefersDark) {
+          document.documentElement.classList.add("dark");
+          if (btn) btn.textContent = "☀ Light";
+        } else {
+          document.documentElement.classList.remove("dark");
+          if (btn) btn.textContent = "☾ Dark";
+        }
+      }
+
+      function toggleTheme() {
+        document.documentElement.classList.toggle("dark");
+        const isDark = document.documentElement.classList.contains("dark");
+        const btn = document.getElementById("theme-toggle");
+
+        btn.textContent = isDark ? "☀ Light" : "☾ Dark";
+
+        updateThreeTheme(isDark);
+      }
+
+      initTheme();
+
+      // --- INITIALIZATION ---
+      lucide.createIcons();
+
+      // 2. THREE.JS Background Logic
+      const canvas = document.getElementById("bg-canvas");
+      const scene = new THREE.Scene();
+
+      // Theme Colors
+      const COLOR_BG_LIGHT = 0xf0f4f8;
+      const COLOR_BG_DARK = 0x020617; // Slate 950
+
+      // Setup initial theme for Three.js
+      const isDarkInit = document.documentElement.classList.contains("dark");
+      const initialBg = isDarkInit ? COLOR_BG_DARK : COLOR_BG_LIGHT;
+
+      scene.background = new THREE.Color(initialBg);
+      scene.fog = new THREE.Fog(initialBg, 10, 50);
+
+      const camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+      camera.position.z = 20;
+
+      const renderer = new THREE.WebGLRenderer({
+        canvas: canvas,
+        antialias: true,
+        alpha: false,
+      });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+
+      const geometries = [
+        new THREE.IcosahedronGeometry(1, 0),
+        new THREE.OctahedronGeometry(1, 0),
+        new THREE.TetrahedronGeometry(1.2, 0),
+      ];
+
+      const shapes = [];
+
+      for (let i = 0; i < 15; i++) {
+        const geom = geometries[Math.floor(Math.random() * geometries.length)];
+        const material = new THREE.MeshBasicMaterial({
+          color: 0x3b82f6,
+          wireframe: true,
+          transparent: true,
+          opacity: 0.1, // Kept subtle
+        });
+
+        const mesh = new THREE.Mesh(geom, material);
+        mesh.position.x = (Math.random() - 0.5) * 60;
+        mesh.position.y = (Math.random() - 0.5) * 40;
+        mesh.position.z = (Math.random() - 0.5) * 20;
+
+        mesh.userData = {
+          rotX: (Math.random() - 0.5) * 0.01,
+          rotY: (Math.random() - 0.5) * 0.01,
+          baseY: mesh.position.y,
+          speed: Math.random() * 0.5 + 0.5,
+        };
+
+        scene.add(mesh);
+        shapes.push(mesh);
+      }
+
+      // Theme Update for Three.js
+      function updateThreeTheme(isDark) {
+        const targetColor = isDark ? COLOR_BG_DARK : COLOR_BG_LIGHT;
+        if (scene.background) scene.background.setHex(targetColor);
+        if (scene.fog) scene.fog.color.setHex(targetColor);
+      }
+
+      let mouseX = 0;
+      let mouseY = 0;
+      document.addEventListener("mousemove", (e) => {
+        mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+        mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+      });
+
+      function animate() {
+        requestAnimationFrame(animate);
+        const time = Date.now() * 0.001;
+
+        shapes.forEach((shape, i) => {
+          shape.rotation.x += shape.userData.rotX;
+          shape.rotation.y += shape.userData.rotY;
+          shape.position.y =
+            shape.userData.baseY + Math.sin(time * shape.userData.speed) * 1;
+          shape.position.x += (mouseX * 2 - shape.position.x) * 0.005;
+          shape.position.y += (mouseY * 2 - shape.position.y) * 0.005;
+        });
+
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      // 3. Result Parsing & Display Logic
       document.addEventListener("DOMContentLoaded", () => {
         const urlParams = new URLSearchParams(window.location.search);
-
-        // ---------------- Main Summary ----------------
-        const topic = urlParams.get("topic") || "N/A";
+        const topic = urlParams.get("topic") || "Unknown Topic";
         const total = parseInt(urlParams.get("total") || 0);
+        const resultsJSON = urlParams.get("results");
 
         document.getElementById("quiz-topic").textContent = topic;
         document.getElementById("total-questions").textContent = total;
 
         let calculatedCorrect = 0;
         let calculatedIncorrect = 0;
-        let calculatedScore = 0; // Final score which is only correct answers
+        let calculatedScore = 0;
 
-        // ---------------- DETAIL REVIEW & CALCULATION ----------------
-        const resultsJSON = urlParams.get("results");
         if (resultsJSON) {
           try {
-            const results = JSON.parse(decodeURIComponent(resultsJSON));
+            let results;
+            try {
+              results = JSON.parse(resultsJSON);
+            } catch (e) {
+              results = JSON.parse(decodeURIComponent(resultsJSON));
+            }
+
             const reviewContainer = document.getElementById("review-container");
+            reviewContainer.innerHTML = ""; // Clear loading state
 
             results.forEach((r) => {
-              const status = r.status;
-              const reviewClass = status === "Correct" ? "correct" : "wrong"; // Use 'wrong' class for all non-correct states
-
-              if (status === "Correct") {
+              const isCorrect = r.status === "Correct";
+              if (isCorrect) {
                 calculatedCorrect++;
                 calculatedScore++;
               } else {
-                // Incorrect includes "Wrong" (answered incorrectly) and "Skipped" (not answered)
                 calculatedIncorrect++;
               }
 
+              // Style definitions with Dark Mode Support
+              const borderClass = isCorrect
+                ? "border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-900/20"
+                : "border-red-200 bg-red-50/50 dark:border-red-800 dark:bg-red-900/20";
+              const iconColor = isCorrect
+                ? "text-green-500 dark:text-green-400"
+                : "text-red-500 dark:text-red-400";
+              const iconName = isCorrect ? "check-circle-2" : "x-circle";
+              const statusTextClass = isCorrect
+                ? "text-green-700 bg-green-100 dark:text-green-300 dark:bg-green-900/50"
+                : "text-red-700 bg-red-100 dark:text-red-300 dark:bg-red-900/50";
+
               const div = document.createElement("div");
-              div.classList.add("review-item");
-              div.classList.add(reviewClass);
+              div.className = `review-item p-5 rounded-xl border ${borderClass}`;
 
               div.innerHTML = `
-                <div class="review-question">Q${r.qNo}. ${r.question}</div>
-                <div class="review-answer"><span>Your Answer:</span> ${
-                  r.userAns || "Not Answered/Marked for Review"
-                }</div>
-                <div class="review-answer"><span>Correct Answer:</span> ${
-                  r.correctAns
-                }</div>
-                <div class="review-answer"><span>Status:</span> ${
-                  r.status
-                }</div>
-              `;
+                            <div class="flex items-start gap-4">
+                                <div class="mt-1">
+                                    <i data-lucide="${iconName}" class="w-6 h-6 ${iconColor}"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <h4 class="font-bold text-slate-800 dark:text-slate-200 text-base">Q${
+                                          r.qNo
+                                        }. ${r.question}</h4>
+                                        <span class="text-xs font-bold px-2 py-1 rounded uppercase tracking-wide ${statusTextClass}">${
+                r.status
+              }</span>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm mt-3">
+                                        <div class="bg-white/60 dark:bg-slate-800/60 p-2 rounded-lg border border-slate-100 dark:border-slate-700">
+                                            <span class="text-slate-400 dark:text-slate-500 text-xs block uppercase font-bold">Your Answer</span>
+                                            <span class="${
+                                              isCorrect
+                                                ? "text-green-700 dark:text-green-400 font-medium"
+                                                : "text-red-600 dark:text-red-400 font-medium"
+                                            }">
+                                                ${r.userAns || "Skipped"}
+                                            </span>
+                                        </div>
+                                        <div class="bg-white/60 dark:bg-slate-800/60 p-2 rounded-lg border border-slate-100 dark:border-slate-700">
+                                            <span class="text-slate-400 dark:text-slate-500 text-xs block uppercase font-bold">Correct Answer</span>
+                                            <span class="text-slate-700 dark:text-slate-300 font-medium">${
+                                              r.correctAns
+                                            }</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
               reviewContainer.appendChild(div);
             });
 
-            // Update the summary details
+            // Re-initialize icons
+            lucide.createIcons();
+
+            // Update Stats
             document.getElementById("correct-answers").textContent =
               calculatedCorrect;
             document.getElementById("incorrect-answers").textContent =
               calculatedIncorrect;
 
-            // ---------------- Score & Circular Progress ----------------
+            // Animate Score Circle
             const scorePercent =
               total > 0 ? Math.round((calculatedScore / total) * 100) : 0;
-            document.getElementById(
-              "score-percent"
-            ).textContent = `${scorePercent}%`;
 
-            const progressCircle = document.querySelector(
-              ".score-circle .progress"
-            );
-            const radius = 54;
-            const circumference = 2 * Math.PI * radius;
-
-            progressCircle.style.strokeDasharray = circumference;
-            progressCircle.style.strokeDashoffset = circumference;
-
-            // Animate fill
             setTimeout(() => {
-              const offset =
-                circumference - (scorePercent / 100) * circumference;
-              progressCircle.style.strokeDashoffset = offset;
-            }, 200);
+              document.getElementById(
+                "score-text"
+              ).textContent = `${scorePercent}%`;
+
+              // Update Stroke color based on score
+              const circlePath = document.getElementById("score-circle-path");
+              if (scorePercent >= 70)
+                circlePath.setAttribute("stroke", "#22c55e"); // Green
+              else if (scorePercent >= 40)
+                circlePath.setAttribute("stroke", "#f59e0b"); // Orange
+              else circlePath.setAttribute("stroke", "#ef4444"); // Red
+
+              circlePath.setAttribute(
+                "stroke-dasharray",
+                `${scorePercent}, 100`
+              );
+            }, 300);
           } catch (e) {
-            console.error("Failed to parse results JSON", e);
-            document.getElementById("review-container").innerHTML =
-              "<p>Error loading detailed results.</p>";
+            console.error("Failed to parse results", e);
+            document.getElementById(
+              "review-container"
+            ).innerHTML = `<div class="text-center text-red-500 py-10">Error loading results data. <br> ${e.message}</div>`;
           }
         }
       });

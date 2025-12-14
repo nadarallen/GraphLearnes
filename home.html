@@ -3,165 +3,811 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GraphEdu Home</title>
-    <link rel="stylesheet" href="style.css" />
+    <title>GraphEDU - Student Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+      };
+    </script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <style>
+      body {
+        font-family: "Roboto", sans-serif;
+        margin: 0;
+        /* Background handled by Tailwind */
+        overflow-x: hidden; /* Prevent horizontal scroll */
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+
+      /* 3D Canvas Background */
+      #bg-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: -1;
+      }
+
+      /* Glassmorphism Base Class */
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+        transition: background-color 0.3s, border-color 0.3s;
+      }
+
+      /* Dark Mode Glass */
+      .dark .glass-panel {
+        background: rgba(30, 41, 59, 0.6); /* Slate-800 transparent */
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+      }
+
+      /* Sidebar Styling */
+      .sidebar-glass {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(16px);
+        border-right: 1px solid rgba(255, 255, 255, 0.6);
+        transition: background-color 0.3s, border-color 0.3s;
+      }
+      .dark .sidebar-glass {
+        background: rgba(15, 23, 42, 0.85); /* Slate-900 */
+        border-right: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      /* 3D Card Tilt Effect */
+      .tilt-card {
+        transform-style: preserve-3d;
+        transform: perspective(1000px);
+        transition: transform 0.1s ease-out; /* Fast response for tilt */
+      }
+
+      /* Content Transition */
+      .prereq-content {
+        display: grid;
+        grid-template-rows: 0fr;
+        transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+      }
+
+      .prereq-content.open {
+        grid-template-rows: 1fr;
+      }
+
+      .prereq-inner {
+        min-height: 0;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: opacity 0.4s, transform 0.4s;
+      }
+
+      .prereq-content.open .prereq-inner {
+        opacity: 1;
+        transform: translateY(0);
+        padding-top: 1rem;
+      }
+
+      .logo-font {
+        font-family: "Product Sans", "Roboto", sans-serif;
+      }
+
+      /* Theme Toggle Button */
+      .theme-btn {
+        background: transparent;
+        border: 1px solid #cbd5e1;
+        color: #64748b;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        transition: all 0.3s;
+      }
+      .theme-btn:hover {
+        background: #e2e8f0;
+        color: #1e293b;
+      }
+      .dark .theme-btn {
+        border-color: #475569;
+        color: #94a3b8;
+      }
+      .dark .theme-btn:hover {
+        background: #334155;
+        color: #fff;
+      }
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+      }
+      .dark ::-webkit-scrollbar-thumb {
+        background: #475569;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+      .dark ::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+      }
+    </style>
   </head>
-  <body>
-    <div class="dashboard-container">
-      <header class="dashboard-header">
-        <div class="site-name">GraphEdu</div>
-        <a href="login.html" class="logout-button">Logout</a>
-      </header>
+  <body
+    class="antialiased min-h-screen flex flex-col bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100"
+  >
+    <!-- 1. 3D BACKGROUND -->
+    <canvas id="bg-canvas"></canvas>
 
-      <div class="dashboard-body">
-        <aside class="sidebar">
-          <nav>
-            <ul>
-              <li>
-                <button class="dropdown-btn" id="ds-dropdown-btn">DS ▾</button>
-                <ul class="dropdown-content" id="ds-chapters">
-                  <li><a>1) Introduction to DS</a></li>
-                  <li><a>2) Stacks & Queues</a></li>
-                  <li><a>3) Linked List</a></li>
-                  <li><a>4) Trees</a></li>
-                  <li><a>5) Graphs</a></li>
-                  <li><a>6) Searching Techniques</a></li>
-                </ul>
-              </li>
-              <li>
-                <a href="#" class="sidebar-link">DSGT</a>
-              </li>
-            </ul>
-          </nav>
-        </aside>
+    <!-- HEADER -->
+    <header
+      class="fixed top-0 w-full h-16 z-50 glass-panel flex items-center justify-between px-6 bg-white/70 dark:bg-slate-900/70"
+    >
+      <div class="flex items-center gap-3">
+        <div class="bg-blue-100 dark:bg-blue-900/30 p-1.5 rounded-lg">
+          <i
+            data-lucide="network"
+            class="w-6 h-6 text-blue-600 dark:text-blue-400"
+          ></i>
+        </div>
+        <span
+          class="text-xl font-bold text-slate-800 dark:text-slate-100 logo-font"
+          >Graph<span class="text-blue-600 dark:text-blue-400">Edu</span></span
+        >
+      </div>
 
-        <main class="main-content">
-          <h1>Data Structures (DS)</h1>
-          <div class="content-grid">
-            <div class="content-box">
-              <h3>01. Introduction to Data Structures</h3>
-              <div class="prereq-content">
-                <a href="expand.html" class="balls">
-                  <h4>Prerequisites:</h4>
-                  <ul>
-                    <li>Basic programming (C/C++/Java)</li>
-                    <li>Data types & variables</li>
-                    <li>Arrays</li>
-                    <li>Loops & functions</li>
-                  </ul>
-                </a>
+      <div class="flex items-center gap-4">
+        <div
+          class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-white/50 dark:bg-slate-800/50 rounded-full border border-white/60 dark:border-slate-700"
+        >
+          <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+          <span class="text-xs font-medium text-slate-500 dark:text-slate-400"
+            >System Online</span
+          >
+        </div>
+
+        <button class="theme-btn" id="theme-toggle" onclick="toggleTheme()">
+          ☀ Light
+        </button>
+
+        <a
+          href="login.html"
+          class="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-red-500 dark:hover:text-red-400 transition-colors px-3 py-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+        >
+          <i data-lucide="log-out" class="w-4 h-4"></i>
+          Logout
+        </a>
+      </div>
+    </header>
+
+    <!-- MAIN LAYOUT -->
+    <div class="flex pt-16 min-h-screen">
+      <!-- SIDEBAR -->
+      <aside
+        class="w-64 fixed h-full z-40 sidebar-glass hidden md:block transform transition-transform duration-300"
+      >
+        <div class="p-6">
+          <div
+            class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4"
+          >
+            Curriculum
+          </div>
+          <nav class="space-y-2">
+            <!-- Dropdown Item -->
+            <div class="group">
+              <button
+                id="ds-dropdown-btn"
+                class="w-full flex items-center justify-between px-4 py-3 bg-blue-50/80 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-xl font-medium transition-all hover:shadow-md hover:bg-blue-100 dark:hover:bg-blue-900/40"
+              >
+                <div class="flex items-center gap-3">
+                  <i data-lucide="layers" class="w-5 h-5"></i>
+                  <span>Data Structures</span>
+                </div>
+                <i
+                  data-lucide="chevron-down"
+                  id="chevron-icon"
+                  class="w-4 h-4 transition-transform duration-300"
+                ></i>
+              </button>
+
+              <!-- Dropdown Menu -->
+              <div
+                id="ds-chapters"
+                class="hidden pl-4 mt-2 space-y-1 border-l-2 border-blue-100 dark:border-slate-700 ml-4"
+              >
                 <a
-                  href="quiz.html?topic=Introduction to Data Structures"
-                  class="quiz-btn"
-                  >TAKE QUIZ</a
+                  href="#"
+                  class="block px-4 py-2 text-sm text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                  >1. Introduction</a
+                >
+                <a
+                  href="#"
+                  class="block px-4 py-2 text-sm text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                  >2. Stacks & Queues</a
+                >
+                <a
+                  href="#"
+                  class="block px-4 py-2 text-sm text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                  >3. Linked List</a
+                >
+                <a
+                  href="#"
+                  class="block px-4 py-2 text-sm text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                  >4. Trees</a
+                >
+                <a
+                  href="#"
+                  class="block px-4 py-2 text-sm text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                  >5. Graphs</a
+                >
+                <a
+                  href="#"
+                  class="block px-4 py-2 text-sm text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                  >6. Searching</a
                 >
               </div>
             </div>
-            <div class="content-box">
-              <h3>02. Stacks and Queues</h3>
-              <div class="prereq-content">
-                <h4>Prerequisites:</h4>
-                <ul>
-                  <li>Arrays</li>
-                  <li>Functions & modular code</li>
-                  <li>Expression evaluation (for infix/postfix)</li>
-                  <li>Basic understanding of ADT</li>
-                </ul>
-                <a href="quiz.html?topic=Stacks and Queues" class="quiz-btn"
-                  >TAKE QUIZ</a
+
+            <a
+              href="#"
+              class="w-full flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 rounded-xl font-medium hover:bg-white/60 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition-all"
+            >
+              <i data-lucide="cpu" class="w-5 h-5"></i>
+              <span>Algorithms (DSGT)</span>
+            </a>
+            <a
+              href="#"
+              class="w-full flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 rounded-xl font-medium hover:bg-white/60 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition-all"
+            >
+              <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+              <span>Progress Analytics</span>
+            </a>
+          </nav>
+        </div>
+
+        <!-- User Profile Snippet -->
+        <div class="absolute bottom-20 left-0 w-full px-6">
+          <div
+            class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-4 text-white shadow-lg shadow-blue-500/20"
+          >
+            <div class="text-xs opacity-80 mb-1">Current Graph Score</div>
+            <div class="text-2xl font-bold">85%</div>
+            <div
+              class="w-full bg-white/20 h-1.5 rounded-full mt-2 overflow-hidden"
+            >
+              <div class="bg-white h-full w-[85%] rounded-full"></div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- MAIN CONTENT -->
+      <main
+        class="flex-1 md:ml-64 p-6 md:p-10 max-w-7xl mx-auto w-full relative z-10"
+      >
+        <div class="mb-10 animate-fade-in-up">
+          <h1
+            class="text-3xl md:text-4xl font-bold text-slate-800 dark:text-white mb-2 logo-font"
+          >
+            Data Structures
+          </h1>
+          <p class="text-slate-500 dark:text-slate-400">
+            Master the building blocks of efficient software.
+          </p>
+        </div>
+
+        <!-- CONTENT GRID (MASONRY STYLE: Split into 2 independent columns) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+          <!-- LEFT COLUMN (Modules 01, 03) -->
+          <div class="flex flex-col gap-6 w-full">
+            <!-- Card 1: Introduction -->
+            <div
+              class="glass-panel rounded-2xl p-6 tilt-card cursor-pointer group hover:border-blue-300 dark:hover:border-blue-500 transition-colors"
+              onclick="toggleAccordion(this)"
+            >
+              <div class="flex items-start justify-between mb-2">
+                <div
+                  class="bg-orange-100 dark:bg-orange-900/30 p-3 rounded-xl text-orange-600 dark:text-orange-400"
+                >
+                  <i data-lucide="box" class="w-6 h-6"></i>
+                </div>
+                <span
+                  class="text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-2 py-1 rounded uppercase"
+                  >Module 01</span
                 >
               </div>
-            </div>
-            <div class="content-box">
-              <h3>03. Linked Lists</h3>
+              <h3
+                class="text-xl font-bold text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"
+              >
+                Introduction to Data Structures
+              </h3>
+              <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                Fundamentals of data organization and storage formats.
+              </p>
+
+              <!-- Prerequisite Accordion -->
               <div class="prereq-content">
-                <h4>Prerequisites:</h4>
-                <ul>
-                  <li>Pointers</li>
-                  <li>Dynamic memory (malloc, free)</li>
-                  <li>Structures (struct/class)</li>
-                  <li>Array vs pointer concepts</li>
-                </ul>
-                <a href="quiz.html?topic=Linked Lists" class="quiz-btn"
-                  >TAKE QUIZ</a
+                <div
+                  class="prereq-inner border-t border-slate-200/60 dark:border-slate-700 mt-4"
+                >
+                  <h4
+                    class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase mb-3 flex items-center gap-2"
+                  >
+                    <i data-lucide="alert-circle" class="w-3 h-3"></i>
+                    Prerequisites
+                  </h4>
+                  <ul
+                    class="space-y-2 text-sm text-slate-600 dark:text-slate-300 mb-4"
+                  >
+                    <li class="flex items-center gap-2">
+                      <i
+                        data-lucide="check-circle-2"
+                        class="w-4 h-4 text-green-500 dark:text-green-400"
+                      ></i>
+                      Basic C/C++/Java
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <i
+                        data-lucide="check-circle-2"
+                        class="w-4 h-4 text-green-500 dark:text-green-400"
+                      ></i>
+                      Data Types & Variables
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <i
+                        data-lucide="check-circle-2"
+                        class="w-4 h-4 text-green-500 dark:text-green-400"
+                      ></i>
+                      Control Loops
+                    </li>
+                  </ul>
+
+                  <!-- Action Buttons -->
+                  <div class="flex flex-col sm:flex-row gap-3 mt-4">
+                    <a
+                      href="expand.html"
+                      class="flex-1 inline-flex items-center justify-center px-4 py-2.5 border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors font-medium text-sm quiz-btn"
+                    >
+                      <i data-lucide="network" class="w-4 h-4 mr-2"></i>
+                      View Knowledge Graph
+                    </a>
+                    <a
+                      href="quiz.html?topic=Intro"
+                      class="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm shadow-lg shadow-blue-600/20 quiz-btn"
+                    >
+                      Start Evaluation Quiz
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 3: Linked Lists -->
+            <div
+              class="glass-panel rounded-2xl p-6 tilt-card cursor-pointer group hover:border-blue-300 dark:hover:border-blue-500 transition-colors"
+              onclick="toggleAccordion(this)"
+            >
+              <div class="flex items-start justify-between mb-2">
+                <div
+                  class="bg-green-100 dark:bg-green-900/30 p-3 rounded-xl text-green-600 dark:text-green-400"
+                >
+                  <i data-lucide="link" class="w-6 h-6"></i>
+                </div>
+                <span
+                  class="text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-2 py-1 rounded uppercase"
+                  >Module 03</span
                 >
               </div>
-            </div>
-            <div class="content-box">
-              <h3>04. Trees</h3>
+              <h3
+                class="text-xl font-bold text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"
+              >
+                Linked Lists
+              </h3>
+              <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                Dynamic memory allocation and pointer manipulation.
+              </p>
+
               <div class="prereq-content">
-                <h4>Prerequisites:</h4>
-                <ul>
-                  <li>Linked list concepts</li>
-                  <li>Recursion</li>
-                  <li>Stack (for traversal logic)</li>
-                  <li>Binary search basics</li>
-                </ul>
-                <a href="quiz.html?topic=Trees" class="quiz-btn">TAKE QUIZ</a>
-              </div>
-            </div>
-            <div class="content-box">
-              <h3>05. Graphs</h3>
-              <div class="prereq-content">
-                <h4>Prerequisites:</h4>
-                <ul>
-                  <li>Tree traversal (DFS/BFS)</li>
-                  <li>Stack & Queue</li>
-                  <li>2D arrays (adjacency matrix)</li>
-                  <li>Recursion</li>
-                </ul>
-                <a href="quiz.html?topic=Graphs" class="quiz-btn">TAKE QUIZ</a>
-              </div>
-            </div>
-            <div class="content-box">
-              <h3>06. Searching Techniques</h3>
-              <div class="prereq-content">
-                <h4>Prerequisites:</h4>
-                <ul>
-                  <li>Arrays</li>
-                  <li>Linear & Binary search</li>
-                  <li>Modulo operation (for hashing)</li>
-                  <li>Functions & logic building</li>
-                </ul>
-                <a href="quiz.html?topic=Searching Techniques" class="quiz-btn"
-                  >TAKE QUIZ</a
+                <div
+                  class="prereq-inner border-t border-slate-200/60 dark:border-slate-700 mt-4"
                 >
+                  <h4
+                    class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase mb-3"
+                  >
+                    Prerequisites
+                  </h4>
+                  <ul
+                    class="space-y-2 text-sm text-slate-600 dark:text-slate-300 mb-4"
+                  >
+                    <li class="flex items-center gap-2">
+                      <i
+                        data-lucide="check-circle-2"
+                        class="w-4 h-4 text-green-500 dark:text-green-400"
+                      ></i>
+                      Pointers & References
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <i
+                        data-lucide="check-circle-2"
+                        class="w-4 h-4 text-green-500 dark:text-green-400"
+                      ></i>
+                      Structs/Classes
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <i
+                        data-lucide="check-circle-2"
+                        class="w-4 h-4 text-green-500 dark:text-green-400"
+                      ></i>
+                      Malloc/New
+                    </li>
+                  </ul>
+                  <a
+                    href="quiz.html?topic=LinkedLists"
+                    class="inline-flex items-center justify-center w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all quiz-btn"
+                  >
+                    Start Evaluation Quiz
+                  </a>
+                </div>
               </div>
             </div>
           </div>
-        </main>
-      </div>
+
+          <!-- RIGHT COLUMN (Modules 02, 04) -->
+          <div class="flex flex-col gap-6 w-full">
+            <!-- Card 2: Stacks & Queues -->
+            <div
+              class="glass-panel rounded-2xl p-6 tilt-card cursor-pointer group hover:border-blue-300 dark:hover:border-blue-500 transition-colors"
+              onclick="toggleAccordion(this)"
+            >
+              <div class="flex items-start justify-between mb-2">
+                <div
+                  class="bg-purple-100 dark:bg-purple-900/30 p-3 rounded-xl text-purple-600 dark:text-purple-400"
+                >
+                  <i data-lucide="layers" class="w-6 h-6"></i>
+                </div>
+                <span
+                  class="text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-2 py-1 rounded uppercase"
+                  >Module 02</span
+                >
+              </div>
+              <h3
+                class="text-xl font-bold text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"
+              >
+                Stacks & Queues
+              </h3>
+              <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                LIFO and FIFO linear data structure implementation.
+              </p>
+
+              <div class="prereq-content">
+                <div
+                  class="prereq-inner border-t border-slate-200/60 dark:border-slate-700 mt-4"
+                >
+                  <h4
+                    class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase mb-3"
+                  >
+                    Prerequisites
+                  </h4>
+                  <ul
+                    class="space-y-2 text-sm text-slate-600 dark:text-slate-300 mb-4"
+                  >
+                    <li class="flex items-center gap-2">
+                      <i
+                        data-lucide="check-circle-2"
+                        class="w-4 h-4 text-green-500 dark:text-green-400"
+                      ></i>
+                      Array Operations
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <i
+                        data-lucide="check-circle-2"
+                        class="w-4 h-4 text-green-500 dark:text-green-400"
+                      ></i>
+                      Modular Functions
+                    </li>
+                  </ul>
+                  <a
+                    href="quiz.html?topic=Stacks"
+                    class="inline-flex items-center justify-center w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all quiz-btn"
+                  >
+                    Start Evaluation Quiz
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 4: Trees -->
+            <div
+              class="glass-panel rounded-2xl p-6 tilt-card cursor-pointer group hover:border-blue-300 dark:hover:border-blue-500 transition-colors"
+              onclick="toggleAccordion(this)"
+            >
+              <div class="flex items-start justify-between mb-2">
+                <div
+                  class="bg-indigo-100 dark:bg-indigo-900/30 p-3 rounded-xl text-indigo-600 dark:text-indigo-400"
+                >
+                  <i data-lucide="git-branch" class="w-6 h-6"></i>
+                </div>
+                <span
+                  class="text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-2 py-1 rounded uppercase"
+                  >Module 04</span
+                >
+              </div>
+              <h3
+                class="text-xl font-bold text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"
+              >
+                Trees
+              </h3>
+              <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                Hierarchical data structures, BST, and traversals.
+              </p>
+
+              <div class="prereq-content">
+                <div
+                  class="prereq-inner border-t border-slate-200/60 dark:border-slate-700 mt-4"
+                >
+                  <h4
+                    class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase mb-3"
+                  >
+                    Prerequisites
+                  </h4>
+                  <ul
+                    class="space-y-2 text-sm text-slate-600 dark:text-slate-300 mb-4"
+                  >
+                    <li class="flex items-center gap-2">
+                      <i
+                        data-lucide="check-circle-2"
+                        class="w-4 h-4 text-green-500 dark:text-green-400"
+                      ></i>
+                      Recursion
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <i
+                        data-lucide="check-circle-2"
+                        class="w-4 h-4 text-green-500 dark:text-green-400"
+                      ></i>
+                      Linked Lists
+                    </li>
+                  </ul>
+                  <a
+                    href="quiz.html?topic=Trees"
+                    class="inline-flex items-center justify-center w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all quiz-btn"
+                  >
+                    Start Evaluation Quiz
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
 
     <script>
-      // --- Sidebar Dropdown Functionality ---
-      const dropdownBtn = document.getElementById("ds-dropdown-btn");
-      const chapterList = document.getElementById("ds-chapters");
-      dropdownBtn.addEventListener("click", function () {
-        chapterList.classList.toggle("show");
+      // --- THEME MANAGEMENT ---
+      function initTheme() {
+        const prefersDark =
+          window.matchMedia &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const btn = document.getElementById("theme-toggle");
+
+        if (prefersDark) {
+          document.documentElement.classList.add("dark");
+          if (btn) btn.textContent = "☀ Light";
+        } else {
+          document.documentElement.classList.remove("dark");
+          if (btn) btn.textContent = "☾ Dark";
+        }
+      }
+
+      function toggleTheme() {
+        document.documentElement.classList.toggle("dark");
+        const isDark = document.documentElement.classList.contains("dark");
+        const btn = document.getElementById("theme-toggle");
+
+        btn.textContent = isDark ? "☀ Light" : "☾ Dark";
+
+        updateThreeTheme(isDark);
+      }
+
+      initTheme();
+
+      // 1. Initialize Lucide Icons
+      lucide.createIcons();
+
+      // 2. Sidebar Toggle Logic
+      const dsBtn = document.getElementById("ds-dropdown-btn");
+      const dsMenu = document.getElementById("ds-chapters");
+      const chevron = document.getElementById("chevron-icon");
+
+      dsBtn.addEventListener("click", () => {
+        dsMenu.classList.toggle("hidden");
+        chevron.classList.toggle("rotate-180");
       });
 
-      // --- Content Box Accordion Functionality ---
-      const contentBoxes = document.querySelectorAll(".content-box");
-      contentBoxes.forEach((clickedBox) => {
-        clickedBox.addEventListener("click", function (event) {
-          // Prevent click from bubbling up if the quiz button was the target
-          if (event.target.classList.contains("quiz-btn")) {
-            return;
-          }
-          const currentContent = this.querySelector(".prereq-content");
-          const isAlreadyShown = currentContent.classList.contains("show");
+      // 3. Accordion Logic with Smooth Expansion
+      function toggleAccordion(card) {
+        const content = card.querySelector(".prereq-content");
+        const isOpen = content.classList.contains("open");
 
-          // First, close all other boxes
-          contentBoxes.forEach((otherBox) => {
-            otherBox.querySelector(".prereq-content").classList.remove("show");
-          });
+        // Close all others first (optional, keeps UI clean)
+        document
+          .querySelectorAll(".prereq-content")
+          .forEach((c) => c.classList.remove("open"));
 
-          // If the clicked box was not already open, open it.
-          if (!isAlreadyShown) {
-            currentContent.classList.add("show");
-          }
+        // Toggle current
+        if (!isOpen) {
+          content.classList.add("open");
+        }
+      }
+
+      // Prevent button click from triggering card click
+      document.querySelectorAll(".quiz-btn").forEach((btn) => {
+        btn.addEventListener("click", (e) => e.stopPropagation());
+      });
+
+      // 4. THREE.JS BACKGROUND ANIMATION
+      const canvas = document.getElementById("bg-canvas");
+      const scene = new THREE.Scene();
+
+      // Theme Colors
+      const COLOR_BG_LIGHT = 0xf0f4f8;
+      const COLOR_BG_DARK = 0x020617; // Slate 950
+
+      const isDarkInit = document.documentElement.classList.contains("dark");
+      const initialBg = isDarkInit ? COLOR_BG_DARK : COLOR_BG_LIGHT;
+
+      // Light background color
+      scene.background = new THREE.Color(initialBg);
+      // Add some fog for depth
+      scene.fog = new THREE.Fog(initialBg, 10, 50);
+
+      const camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+      camera.position.z = 20;
+
+      const renderer = new THREE.WebGLRenderer({
+        canvas: canvas,
+        antialias: true,
+        alpha: false,
+      });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+
+      // Add Objects (Geometric Shapes representing Data)
+      const geometries = [
+        new THREE.IcosahedronGeometry(1, 0), // Sphere-ish
+        new THREE.BoxGeometry(1.5, 1.5, 1.5), // Cube
+        new THREE.OctahedronGeometry(1, 0), // Diamond
+        new THREE.TetrahedronGeometry(1.2, 0), // Pyramid
+      ];
+
+      const shapes = [];
+      const shapeCount = 20; // Not too crowded
+
+      for (let i = 0; i < shapeCount; i++) {
+        const geom = geometries[Math.floor(Math.random() * geometries.length)];
+
+        // Glassy/Wireframe Material
+        const material = new THREE.MeshBasicMaterial({
+          color: 0x3b82f6, // Blue
+          wireframe: true,
+          transparent: true,
+          opacity: 0.15,
         });
+
+        const mesh = new THREE.Mesh(geom, material);
+
+        // Random Positions spread out
+        mesh.position.x = (Math.random() - 0.5) * 60;
+        mesh.position.y = (Math.random() - 0.5) * 40;
+        mesh.position.z = (Math.random() - 0.5) * 20;
+
+        // Random Rotation Speed
+        mesh.userData = {
+          rotX: (Math.random() - 0.5) * 0.01,
+          rotY: (Math.random() - 0.5) * 0.01,
+          baseY: mesh.position.y,
+        };
+
+        scene.add(mesh);
+        shapes.push(mesh);
+      }
+
+      // Theme Update for Three.js
+      function updateThreeTheme(isDark) {
+        const targetColor = isDark ? COLOR_BG_DARK : COLOR_BG_LIGHT;
+        if (scene.background) scene.background.setHex(targetColor);
+        if (scene.fog) scene.fog.color.setHex(targetColor);
+      }
+
+      // Global Mouse interaction for background Parallax ONLY
+      let mouseX = 0;
+      let mouseY = 0;
+
+      document.addEventListener("mousemove", (e) => {
+        mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+        mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+      });
+
+      // 5. UPDATED TILT LOGIC FOR CARDS (Strict Hover Only)
+      const cards = document.querySelectorAll(".tilt-card");
+
+      cards.forEach((card) => {
+        card.addEventListener("mousemove", (e) => {
+          // Get position of the card relative to viewport
+          const rect = card.getBoundingClientRect();
+          const cardX = rect.left + rect.width / 2;
+          const cardY = rect.top + rect.height / 2;
+
+          // Mouse position relative to card center
+          const distX = e.clientX - cardX;
+          const distY = e.clientY - cardY;
+
+          // Calculate tilt (Max ~15 deg)
+          const rotateY = (distX / 15).toFixed(2);
+          const rotateX = -(distY / 15).toFixed(2);
+
+          card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+        });
+
+        card.addEventListener("mouseleave", () => {
+          // Reset immediately on leave
+          card.style.transform = `perspective(1000px) rotateX(0) rotateY(0) scale(1)`;
+        });
+      });
+
+      // Animation Loop
+      const clock = new THREE.Clock();
+
+      function animate() {
+        requestAnimationFrame(animate);
+        const time = clock.getElapsedTime();
+
+        // Animate Shapes
+        shapes.forEach((shape, i) => {
+          shape.rotation.x += shape.userData.rotX;
+          shape.rotation.y += shape.userData.rotY;
+
+          // Gentle Floating
+          shape.position.y = shape.userData.baseY + Math.sin(time + i) * 1;
+
+          // Subtle interaction with mouse (Parallax)
+          shape.position.x += (mouseX * 2 - shape.position.x) * 0.005;
+          shape.position.y += (mouseY * 2 - shape.position.y) * 0.005;
+        });
+
+        renderer.render(scene, camera);
+      }
+
+      animate();
+
+      // Resize Handler
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
       });
     </script>
   </body>

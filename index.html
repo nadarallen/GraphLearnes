@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GraphEDU - The Future of Learning</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+      };
+    </script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- GSAP & ScrollTrigger -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <style>
+      body {
+        font-family: "Roboto", sans-serif;
+        margin: 0;
+        /* Default Light Mode Colors handled by Tailwind classes on body */
+        overflow-x: hidden;
+        transition: background-color 0.5s ease, color 0.5s ease;
+      }
+
+      .logo-font {
+        font-family: "Product Sans", "Roboto", sans-serif;
+      }
+
+      /* Fixed 3D Background */
+      #canvas-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        z-index: -1;
+        pointer-events: none;
+        transition: opacity 0.5s ease;
+      }
+
+      /* Sections */
+      section {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        padding: 2rem;
+      }
+
+      /* Text Styling */
+      .hero-text {
+        font-size: clamp(3rem, 8vw, 8rem);
+        font-weight: 900;
+        letter-spacing: -0.05em;
+        line-height: 1;
+        text-align: center;
+        /* Gradient adjusted for visibility in both modes */
+        background: linear-gradient(135deg, currentColor 0%, #3b82f6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        opacity: 0; /* Start hidden for GSAP */
+        transform: translateY(50px);
+      }
+
+      .sub-text {
+        font-size: clamp(1.5rem, 4vw, 3rem);
+        font-weight: 500;
+        /* Color handled by utility classes */
+        text-align: center;
+        max-width: 800px;
+        margin-top: 2rem;
+        opacity: 0;
+      }
+
+      /* Glass Cards */
+      .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        box-shadow: 0 20px 40px -10px rgba(30, 41, 59, 0.1);
+        border-radius: 24px;
+        padding: 2rem;
+        opacity: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        transition: transform 0.3s ease, background-color 0.3s ease,
+          border-color 0.3s ease;
+      }
+
+      /* Dark Mode Glass Card Override */
+      .dark .glass-card {
+        background: rgba(30, 41, 59, 0.6); /* Slate-800 transparent */
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.4);
+      }
+
+      .glass-card:hover {
+        transform: translateY(-10px); /* Subtle lift on hover */
+        box-shadow: 0 30px 60px -12px rgba(30, 41, 59, 0.15);
+      }
+      .dark .glass-card:hover {
+        box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.6);
+      }
+
+      .card-graphic {
+        width: 100%;
+        height: 220px;
+        background: rgba(241, 245, 249, 0.5);
+        border-radius: 16px;
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+      .dark .card-graphic {
+        background: rgba(15, 23, 42, 0.5); /* Slate-900 transparent */
+      }
+
+      /* SVG Animation Styles - Theme Aware */
+      .node {
+        fill: #3b82f6;
+        cursor: pointer;
+        transition: fill 0.3s;
+      }
+      .node:hover {
+        fill: #2563eb;
+      }
+
+      .link {
+        stroke: #cbd5e1; /* Slate-300 */
+        stroke-width: 3;
+        transition: stroke 0.3s;
+      }
+      .dark .link {
+        stroke: #475569; /* Slate-600 */
+      }
+
+      .path-line {
+        fill: none;
+        stroke: #8b5cf6;
+        stroke-width: 5;
+        stroke-dasharray: 300;
+        stroke-dashoffset: 300;
+        stroke-linecap: round;
+      }
+
+      .path-bg {
+        fill: none;
+        stroke: #e2e8f0; /* Slate-200 */
+        stroke-width: 5;
+        stroke-linecap: round;
+        transition: stroke 0.3s;
+      }
+      .dark .path-bg {
+        stroke: #334155; /* Slate-700 */
+      }
+
+      .pulse-circle {
+        fill: #22c55e;
+        opacity: 0;
+        transform-origin: center;
+      }
+
+      /* SVG Ring Backgrounds */
+      .ring-bg {
+        stroke: #e2e8f0;
+        transition: stroke 0.3s;
+      }
+      .dark .ring-bg {
+        stroke: #334155;
+      }
+
+      /* Navigation */
+      nav {
+        position: fixed;
+        top: 0;
+        width: 100%;
+        z-index: 100;
+        padding: 1.5rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(248, 250, 252, 0.8);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+        transition: background-color 0.3s, border-color 0.3s;
+      }
+      .dark nav {
+        background: rgba(15, 23, 42, 0.8); /* Slate-900 */
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .cta-button {
+        background: #2563eb;
+        color: white;
+        padding: 1rem 3rem;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 1.2rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);
+      }
+
+      .cta-button:hover {
+        transform: scale(1.05);
+        background: #1d4ed8;
+        box-shadow: 0 20px 35px -10px rgba(37, 99, 235, 0.5);
+      }
+
+      /* Theme Toggle Button */
+      .theme-btn {
+        background: transparent;
+        border: 1px solid #cbd5e1;
+        color: #64748b;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        transition: all 0.3s;
+        margin-right: 1rem;
+      }
+      .theme-btn:hover {
+        background: #e2e8f0;
+        color: #1e293b;
+      }
+      .dark .theme-btn {
+        border-color: #475569;
+        color: #94a3b8;
+      }
+      .dark .theme-btn:hover {
+        background: #334155;
+        color: #fff;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100"
+  >
+    <!-- 3D Background -->
+    <div id="canvas-container"></div>
+
+    <!-- Navigation -->
+    <nav>
+      <div class="flex items-center gap-2">
+        <i data-lucide="network" class="w-6 h-6 text-blue-600"></i>
+        <span class="text-xl font-bold logo-font"
+          >Graph<span class="text-blue-600">Edu</span></span
+        >
+      </div>
+
+      <div class="flex items-center">
+        <button class="theme-btn" id="theme-toggle" onclick="toggleTheme()">
+          ☀ Light
+        </button>
+        <a
+          href="login.html"
+          class="text-sm font-medium text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400 transition-colors"
+          >Login</a
+        >
+      </div>
+    </nav>
+
+    <!-- Scroll Content -->
+    <main>
+      <!-- Section 1: Introduction -->
+      <section id="sec-1">
+        <h1 class="hero-text text-slate-900 dark:text-white" id="hero-title">
+          Learning isn't<br />Linear.
+        </h1>
+        <p class="sub-text text-slate-600 dark:text-slate-400" id="hero-sub">
+          Why force your brain into a straight line when knowledge is a network?
+        </p>
+        <div
+          class="absolute bottom-10 animate-bounce text-slate-400 dark:text-slate-600"
+        >
+          <i data-lucide="chevron-down" class="w-8 h-8"></i>
+        </div>
+      </section>
+
+      <!-- Section 2: The Problem -->
+      <section id="sec-2">
+        <div class="max-w-4xl mx-auto text-center">
+          <h2
+            class="text-5xl md:text-7xl font-bold text-slate-800 dark:text-slate-100 mb-8 opacity-0 section-title"
+          >
+            Traditional Ed is Broken.
+          </h2>
+          <p
+            class="text-xl md:text-2xl text-slate-500 dark:text-slate-400 leading-relaxed opacity-0 section-desc"
+          >
+            Textbooks treat concepts like isolated islands. <br />
+            Chapter 1. Chapter 2. Chapter 3. <br />
+            <span class="text-blue-600 dark:text-blue-400 font-bold"
+              >But that's not how memory works.</span
+            >
+          </p>
+        </div>
+      </section>
+
+      <!-- Section 3: The Solution (Cards with Graphics) -->
+      <section
+        id="sec-3"
+        class="flex-col md:flex-row gap-8 items-stretch px-4 max-w-7xl mx-auto w-full"
+      >
+        <!-- Card 1: Knowledge Graph -->
+        <div
+          class="glass-card flex-1 feature-card transform translate-y-20"
+          id="card-1"
+        >
+          <div class="card-graphic" id="graph-container">
+            <svg
+              width="300"
+              height="200"
+              viewBox="0 0 300 200"
+              class="w-full h-full"
+            >
+              <g id="links-group">
+                <line x1="150" y1="100" x2="80" y2="60" class="link" />
+                <line x1="150" y1="100" x2="80" y2="140" class="link" />
+                <line x1="150" y1="100" x2="220" y2="60" class="link" />
+                <line x1="150" y1="100" x2="220" y2="140" class="link" />
+              </g>
+              <g id="nodes-group">
+                <!-- Center Node -->
+                <circle
+                  cx="150"
+                  cy="100"
+                  r="12"
+                  class="node"
+                  data-id="center"
+                />
+                <!-- Satellites -->
+                <circle
+                  cx="80"
+                  cy="60"
+                  r="8"
+                  class="node satellite"
+                  data-ox="80"
+                  data-oy="60"
+                />
+                <circle
+                  cx="80"
+                  cy="140"
+                  r="8"
+                  class="node satellite"
+                  data-ox="80"
+                  data-oy="140"
+                />
+                <circle
+                  cx="220"
+                  cy="60"
+                  r="8"
+                  class="node satellite"
+                  data-ox="220"
+                  data-oy="60"
+                />
+                <circle
+                  cx="220"
+                  cy="140"
+                  r="8"
+                  class="node satellite"
+                  data-ox="220"
+                  data-oy="140"
+                />
+              </g>
+            </svg>
+          </div>
+          <div class="flex items-center gap-3 mb-2">
+            <div
+              class="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-lg text-blue-600 dark:text-blue-400"
+            >
+              <i data-lucide="share-2" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100">
+              Connect the Dots
+            </h3>
+          </div>
+          <p class="text-base text-slate-600 dark:text-slate-400">
+            Move your mouse over the graph. See how nodes react and connect,
+            just like concepts in your brain.
+          </p>
+        </div>
+
+        <!-- Card 2: Smart Prereqs -->
+        <div
+          class="glass-card flex-1 feature-card transform translate-y-40"
+          id="card-2"
+        >
+          <div class="card-graphic">
+            <svg
+              width="300"
+              height="200"
+              viewBox="0 0 300 200"
+              class="w-full h-full"
+            >
+              <!-- Background Path -->
+              <path
+                d="M40,150 C100,150 100,50 150,50 C200,50 200,150 260,150"
+                class="path-bg"
+              />
+              <!-- Animating Path -->
+              <path
+                d="M40,150 C100,150 100,50 150,50 C200,50 200,150 260,150"
+                class="path-line"
+                id="path-anim"
+              />
+
+              <!-- Checkpoints -->
+              <circle
+                cx="40"
+                cy="150"
+                r="8"
+                fill="#fff"
+                stroke="#8b5cf6"
+                stroke-width="3"
+                class="checkpoint"
+              />
+              <circle
+                cx="150"
+                cy="50"
+                r="8"
+                fill="#fff"
+                stroke="#8b5cf6"
+                stroke-width="3"
+                class="checkpoint"
+              />
+              <circle
+                cx="260"
+                cy="150"
+                r="8"
+                fill="#fff"
+                stroke="#8b5cf6"
+                stroke-width="3"
+                class="checkpoint"
+              />
+            </svg>
+          </div>
+          <div class="flex items-center gap-3 mb-2">
+            <div
+              class="bg-purple-100 dark:bg-purple-900/50 p-2 rounded-lg text-purple-600 dark:text-purple-400"
+            >
+              <i data-lucide="brain-circuit" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100">
+              Smart Prereqs
+            </h3>
+          </div>
+          <p class="text-base text-slate-600 dark:text-slate-400">
+            Hover to flow through the curriculum. Our AI maps the optimal path
+            from A to B.
+          </p>
+        </div>
+
+        <!-- Card 3: Adaptive Tests -->
+        <div
+          class="glass-card flex-1 feature-card transform translate-y-60"
+          id="card-3"
+        >
+          <div class="card-graphic">
+            <svg
+              width="300"
+              height="200"
+              viewBox="0 0 300 200"
+              class="w-full h-full"
+            >
+              <circle
+                cx="150"
+                cy="100"
+                r="45"
+                class="pulse-circle"
+                id="pulse-1"
+              />
+              <!-- Background ring -->
+              <circle
+                cx="150"
+                cy="100"
+                r="30"
+                fill="none"
+                stroke-width="4"
+                class="ring-bg"
+              />
+              <!-- Success ring -->
+              <circle
+                cx="150"
+                cy="100"
+                r="30"
+                fill="none"
+                stroke="#22c55e"
+                stroke-width="4"
+                stroke-dasharray="188"
+                stroke-dashoffset="188"
+                id="success-ring"
+                transform="rotate(-90 150 100)"
+              />
+
+              <!-- Checkmark -->
+              <path
+                d="M135,100 L145,110 L165,85"
+                fill="none"
+                stroke="#22c55e"
+                stroke-width="4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-dasharray="50"
+                stroke-dashoffset="50"
+                id="success-check"
+              />
+            </svg>
+          </div>
+          <div class="flex items-center gap-3 mb-2">
+            <div
+              class="bg-green-100 dark:bg-green-900/50 p-2 rounded-lg text-green-600 dark:text-green-400"
+            >
+              <i data-lucide="target" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100">
+              Adaptive Tests
+            </h3>
+          </div>
+          <p class="text-base text-slate-600 dark:text-slate-400">
+            Hover to take the test. Experience instant feedback loops that
+            accelerate mastery.
+          </p>
+        </div>
+      </section>
+
+      <!-- Section 4: CTA -->
+      <section id="sec-4">
+        <h2
+          class="text-6xl md:text-8xl font-bold text-slate-900 dark:text-slate-100 mb-10 text-center opacity-0 scale-90 cta-title"
+        >
+          Ready to Liftoff?
+        </h2>
+        <p
+          class="text-2xl text-slate-500 dark:text-slate-400 mb-12 max-w-2xl text-center opacity-0 cta-sub"
+        >
+          Join thousands of students mastering Data Structures the smart way.
+        </p>
+        <a
+          href="login.html"
+          class="cta-button opacity-0 cta-btn flex items-center gap-3"
+        >
+          Enter the Graph <i data-lucide="arrow-right"></i>
+        </a>
+      </section>
+    </main>
+
+    <script>
+      // --- THEME MANAGEMENT ---
+
+      // 1. Initialize Theme
+      function initTheme() {
+        // Check system preference
+        const prefersDark =
+          window.matchMedia &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const btn = document.getElementById("theme-toggle");
+
+        // By default we start light, unless system says dark
+        if (prefersDark) {
+          document.documentElement.classList.add("dark");
+          if (btn) btn.textContent = "☀ Light";
+        } else {
+          document.documentElement.classList.remove("dark");
+          if (btn) btn.textContent = "☾ Dark";
+        }
+      }
+
+      // 2. Toggle Function
+      function toggleTheme() {
+        document.documentElement.classList.toggle("dark");
+        const isDark = document.documentElement.classList.contains("dark");
+        const btn = document.getElementById("theme-toggle");
+
+        btn.textContent = isDark ? "☀ Light" : "☾ Dark";
+
+        // Update Three.js background
+        updateThreeTheme(isDark);
+      }
+
+      // Run Init
+      initTheme();
+
+      // --- STANDARD INITIALIZATION ---
+
+      // 1. Initialize Icons
+      lucide.createIcons();
+
+      // 2. GSAP SCROLL ANIMATIONS
+      gsap.registerPlugin(ScrollTrigger);
+
+      // Hero Section
+      const tl = gsap.timeline();
+      tl.to("#hero-title", {
+        opacity: 1,
+        y: 0,
+        duration: 1,
+        ease: "power3.out",
+      }).to("#hero-sub", {
+        opacity: 1,
+        y: 0,
+        duration: 1,
+        delay: -0.5,
+        ease: "power3.out",
+      });
+
+      // Hero Parallax
+      gsap.to("#sec-1", {
+        scrollTrigger: {
+          trigger: "#sec-1",
+          start: "top top",
+          end: "bottom top",
+          scrub: true,
+        },
+        opacity: 0,
+        scale: 0.9,
+      });
+
+      // Section 2: Text Reveal
+      gsap.to(".section-title", {
+        scrollTrigger: { trigger: "#sec-2", start: "top 70%" },
+        opacity: 1,
+        y: 0,
+        duration: 1,
+      });
+      gsap.to(".section-desc", {
+        scrollTrigger: { trigger: "#sec-2", start: "top 60%" },
+        opacity: 1,
+        y: 0,
+        duration: 1,
+        delay: 0.2,
+      });
+
+      // Section 3: Cards Entrance
+      const cards = gsap.utils.toArray(".feature-card");
+      cards.forEach((card, i) => {
+        gsap.to(card, {
+          scrollTrigger: {
+            trigger: "#sec-3",
+            start: "top 75%",
+          },
+          opacity: 1,
+          y: 0,
+          duration: 1,
+          delay: i * 0.2,
+          ease: "back.out(1.7)",
+        });
+      });
+
+      // Section 4: CTA Zoom In
+      gsap.to(".cta-title", {
+        scrollTrigger: { trigger: "#sec-4", start: "top 70%" },
+        opacity: 1,
+        scale: 1,
+        duration: 0.8,
+      });
+      gsap.to(".cta-sub", {
+        scrollTrigger: { trigger: "#sec-4", start: "top 65%" },
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        delay: 0.2,
+      });
+      gsap.to(".cta-btn", {
+        scrollTrigger: { trigger: "#sec-4", start: "top 60%" },
+        opacity: 1,
+        y: 0,
+        duration: 0.5,
+        delay: 0.4,
+      });
+
+      // ---------------- INTERACTIVITY LOGIC ----------------
+
+      // 1. CARD 1: Interactive Graph (Mouse Repulsion)
+      const card1 = document.getElementById("card-1");
+      const satellites = document.querySelectorAll(".satellite");
+
+      card1.addEventListener("mousemove", (e) => {
+        const rect = card1.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        satellites.forEach((sat) => {
+          const ox = parseFloat(sat.getAttribute("data-ox"));
+          const oy = parseFloat(sat.getAttribute("data-oy"));
+
+          // Calculate vector from mouse to node
+          const dx = ox - mouseX;
+          const dy = oy - mouseY;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          // Repulsion force
+          const maxDist = 150;
+          if (dist < maxDist) {
+            const force = (maxDist - dist) / maxDist;
+            const moveX = (dx / dist) * force * 30; // Move up to 30px
+            const moveY = (dy / dist) * force * 30;
+
+            gsap.to(sat, {
+              x: moveX,
+              y: moveY,
+              duration: 0.5,
+              ease: "power2.out",
+            });
+          } else {
+            gsap.to(sat, { x: 0, y: 0, duration: 0.5, ease: "power2.out" });
+          }
+        });
+      });
+
+      card1.addEventListener("mouseleave", () => {
+        satellites.forEach((sat) => {
+          gsap.to(sat, {
+            x: 0,
+            y: 0,
+            duration: 0.8,
+            ease: "elastic.out(1, 0.5)",
+          });
+        });
+      });
+
+      // 2. CARD 2: Path Scrubbing (Hover fills path)
+      const card2 = document.getElementById("card-2");
+      const pathAnim = document.getElementById("path-anim");
+      const checkpoints = document.querySelectorAll(".checkpoint");
+      let pathTl = gsap.timeline({ paused: true });
+
+      // Build Timeline
+      pathTl.to(pathAnim, {
+        strokeDashoffset: 0,
+        duration: 1.5,
+        ease: "power1.inOut",
+      });
+      // Animate colors of checkpoints as path passes them
+      pathTl.to(checkpoints[0], { fill: "#8b5cf6", duration: 0.2 }, 0.1);
+      pathTl.to(checkpoints[1], { fill: "#8b5cf6", duration: 0.2 }, 0.75);
+      pathTl.to(checkpoints[2], { fill: "#8b5cf6", duration: 0.2 }, 1.4);
+
+      card2.addEventListener("mouseenter", () => pathTl.play());
+      card2.addEventListener("mouseleave", () => pathTl.reverse());
+
+      // 3. CARD 3: Success Animation (Hover triggers check)
+      const card3 = document.getElementById("card-3");
+      const successRing = document.getElementById("success-ring");
+      const successCheck = document.getElementById("success-check");
+      const pulse1 = document.getElementById("pulse-1");
+      let successTl = gsap.timeline({ paused: true });
+
+      successTl
+        .to(successRing, {
+          strokeDashoffset: 0,
+          duration: 0.6,
+          ease: "power2.out",
+        })
+        .to(
+          successCheck,
+          { strokeDashoffset: 0, duration: 0.4, ease: "back.out(1.7)" },
+          "-=0.2"
+        )
+        .to(
+          pulse1,
+          { opacity: 0.2, scale: 1.2, duration: 0.4, repeat: 1, yoyo: true },
+          0
+        );
+
+      card3.addEventListener("mouseenter", () => successTl.play());
+      card3.addEventListener("mouseleave", () => successTl.reverse());
+
+      // 3. THREE.JS BACKGROUND
+      const container = document.getElementById("canvas-container");
+      const scene = new THREE.Scene();
+
+      // INITIAL COLORS (Setup variable to hold current mode colors)
+      const COLOR_BG_LIGHT = 0xf8fafc; // Slate-50
+      const COLOR_BG_DARK = 0x020617; // Slate-950
+
+      // Initial setup handled by updateThreeTheme below, but defaults here:
+      scene.fog = new THREE.FogExp2(COLOR_BG_LIGHT, 0.02);
+      scene.background = new THREE.Color(COLOR_BG_LIGHT);
+
+      const camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+      camera.position.z = 50;
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      container.appendChild(renderer.domElement);
+
+      const geometry = new THREE.BufferGeometry();
+      const count = 2000;
+      const positions = new Float32Array(count * 3);
+      const colors = new Float32Array(count * 3);
+      const color1 = new THREE.Color(0x3b82f6);
+      const color2 = new THREE.Color(0x64748b);
+
+      for (let i = 0; i < count; i++) {
+        const x = (Math.random() - 0.5) * 100;
+        const y = (Math.random() - 0.5) * 100;
+        const z = (Math.random() - 0.5) * 200;
+        positions[i * 3] = x;
+        positions[i * 3 + 1] = y;
+        positions[i * 3 + 2] = z;
+        const mixedColor = Math.random() > 0.5 ? color1 : color2;
+        colors[i * 3] = mixedColor.r;
+        colors[i * 3 + 1] = mixedColor.g;
+        colors[i * 3 + 2] = mixedColor.b;
+      }
+      geometry.setAttribute(
+        "position",
+        new THREE.BufferAttribute(positions, 3)
+      );
+      geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+
+      const material = new THREE.PointsMaterial({
+        size: 0.3,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.8,
+      });
+      const points = new THREE.Points(geometry, material);
+      scene.add(points);
+
+      // --- THREE.JS THEME UPDATE ---
+      function updateThreeTheme(isDark) {
+        const targetColor = isDark ? COLOR_BG_DARK : COLOR_BG_LIGHT;
+
+        // Update Background
+        if (scene.background) scene.background.setHex(targetColor);
+
+        // Update Fog
+        if (scene.fog) scene.fog.color.setHex(targetColor);
+      }
+
+      // Check initial state for Three.js (in case page loaded in dark mode)
+      if (document.documentElement.classList.contains("dark")) {
+        updateThreeTheme(true);
+      }
+
+      let scrollY = 0;
+      window.addEventListener("scroll", () => {
+        scrollY = window.scrollY;
+      });
+
+      function animate() {
+        requestAnimationFrame(animate);
+        points.rotation.z += 0.001;
+        const targetZ = 50 - scrollY * 0.05;
+        camera.position.z += (targetZ - camera.position.z) * 0.05;
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    </script>
+  </body>
+</html>

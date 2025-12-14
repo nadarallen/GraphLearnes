@@ -11,37 +11,90 @@
     <script src="https://unpkg.com/force-graph"></script>
 
     <style>
-      /* --- Color Palette --- */
+      /* --- Color Palette & Variables --- */
       :root {
-        --bg-dark: #050510;
+        /* Default (Dark Mode) */
+        --bg-main: #050510;
+        --text-main: #e0e0e0;
+        --text-muted: #aaa;
+
+        /* Panel & UI */
         --panel-bg: rgba(5, 20, 40, 0.9);
         --panel-border: rgba(137, 207, 240, 0.3);
-        --text-main: #e0e0e0;
+        --header-bg: rgba(0, 0, 0, 0.6);
+
+        /* Nav */
+        --nav-bg: rgba(0, 31, 63, 0.3);
+        --nav-item-bg: rgba(255, 255, 255, 0.05);
+        --nav-item-hover: rgba(137, 207, 240, 0.1);
+        --nav-item-active-text: #050510;
+
+        /* Accents */
         --accent-blue: #89cff0;
         --accent-gold: #ffd700;
+
+        /* Canvas Background */
+        --canvas-gradient: radial-gradient(
+          circle at center,
+          #0a0a20 0%,
+          #000000 100%
+        );
+        --overlay-text: #666;
+      }
+
+      body.light-mode {
+        /* Light Mode Overrides */
+        --bg-main: #ffffff;
+        --text-main: #1a1a1a;
+        --text-muted: #555;
+
+        /* Panel & UI */
+        --panel-bg: rgba(255, 255, 255, 0.9);
+        --panel-border: rgba(0, 0, 0, 0.1);
+        --header-bg: rgba(255, 255, 255, 0.8);
+
+        /* Nav */
+        --nav-bg: rgba(240, 240, 240, 0.8);
+        --nav-item-bg: rgba(0, 0, 0, 0.05);
+        --nav-item-hover: rgba(0, 102, 204, 0.1);
+        --nav-item-active-text: #ffffff;
+
+        /* Accents - Darker for visibility on white */
+        --accent-blue: #0066cc;
+        --accent-gold: #d4af37;
+
+        /* Canvas Background */
+        --canvas-gradient: radial-gradient(
+          circle at center,
+          #ffffff 0%,
+          #f0f4f8 100%
+        );
+        --overlay-text: #888;
       }
 
       body {
         font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         margin: 0;
-        background-color: var(--bg-dark);
+        background-color: var(--bg-main);
         color: var(--text-main);
         overflow: hidden;
         height: 100vh;
         display: flex;
         flex-direction: column;
+        transition: background-color 0.3s, color 0.3s;
       }
 
       /* --- Header --- */
       header {
         padding: 15px 30px;
-        background: rgba(0, 0, 0, 0.6);
+        background: var(--header-bg);
         backdrop-filter: blur(10px);
         border-bottom: 1px solid var(--panel-border);
         display: flex;
         align-items: center;
         justify-content: space-between;
         z-index: 10;
+        transition: background 0.3s, border-color 0.3s;
       }
 
       h1 {
@@ -49,6 +102,12 @@
         font-size: 1.4rem;
         color: var(--accent-blue);
         letter-spacing: 1px;
+      }
+
+      .header-controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
       }
 
       .button {
@@ -61,23 +120,27 @@
         transition: all 0.3s;
         text-decoration: none;
         font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
       .button:hover {
         background: var(--accent-blue);
-        color: var(--bg-dark);
+        color: var(--bg-main);
       }
 
       /* --- Navigation --- */
       #topics-nav {
-        background: rgba(0, 31, 63, 0.3);
+        background: var(--nav-bg);
         padding: 10px 20px;
         display: flex;
         gap: 10px;
         overflow-x: auto;
         white-space: nowrap;
-        border-bottom: 1px solid #222;
+        border-bottom: 1px solid var(--panel-border);
         z-index: 10;
+        transition: background 0.3s;
       }
 
       #topics-nav::-webkit-scrollbar {
@@ -88,8 +151,8 @@
       }
 
       .nav-item {
-        background: rgba(255, 255, 255, 0.05);
-        color: #aaa;
+        background: var(--nav-item-bg);
+        color: var(--text-muted);
         padding: 8px 16px;
         border-radius: 4px;
         cursor: pointer;
@@ -99,13 +162,13 @@
       }
 
       .nav-item:hover {
-        color: #fff;
-        background: rgba(137, 207, 240, 0.1);
+        color: var(--text-main);
+        background: var(--nav-item-hover);
         border-color: var(--accent-blue);
       }
 
       .nav-item.active {
-        color: var(--bg-dark);
+        color: var(--nav-item-active-text);
         background: var(--accent-blue);
         font-weight: bold;
         box-shadow: 0 0 12px rgba(137, 207, 240, 0.3);
@@ -122,8 +185,9 @@
       /* --- Canvas Container --- */
       #graph-canvas {
         flex: 1;
-        background: radial-gradient(circle at center, #0a0a20 0%, #000000 100%);
+        background: var(--canvas-gradient);
         cursor: grab;
+        transition: background 0.5s ease;
       }
       #graph-canvas:active {
         cursor: grabbing;
@@ -140,9 +204,10 @@
         border-left: 3px solid var(--accent-blue);
         border-radius: 8px;
         padding: 25px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
         transform: translateX(400px);
-        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+          background 0.3s;
         z-index: 20;
       }
 
@@ -168,7 +233,7 @@
       #info-panel p {
         line-height: 1.6;
         font-size: 0.9rem;
-        color: #ccc;
+        color: var(--text-main);
         margin: 0;
       }
 
@@ -178,9 +243,10 @@
         bottom: 20px;
         left: 20px;
         font-family: monospace;
-        color: #666;
+        color: var(--overlay-text);
         font-size: 0.8rem;
         pointer-events: none;
+        transition: color 0.3s;
       }
     </style>
   </head>
@@ -188,9 +254,17 @@
     <header>
       <h1>
         Data Structures
-        <span style="font-size: 0.7em; color: #666">// Interactive Canvas</span>
+        <span style="font-size: 0.7em; color: var(--text-muted)"
+          >// Interactive Canvas</span
+        >
       </h1>
-      <a href="home.html" class="button">← Back</a>
+
+      <div class="header-controls">
+        <button class="button" id="theme-toggle" onclick="toggleTheme()">
+          ☀ Mode
+        </button>
+        <a href="home.html" class="button">← Back</a>
+      </div>
     </header>
 
     <nav id="topics-nav"></nav>
@@ -199,7 +273,7 @@
       <div id="graph-canvas"></div>
 
       <div class="instruction-overlay">
-        > Drag to pan • Scroll to zoom • Drag nodes to rearrange
+        > Drag to pan • Scroll to zoom • Click nodes to select
       </div>
 
       <div id="info-panel">
@@ -393,10 +467,24 @@
 
       // 2. SETUP VARIABLES
       let Graph;
+      let selectedNode = null; // Track the currently selected node
       const container = document.getElementById("graph-canvas");
 
       // 3. INITIALIZATION
       document.addEventListener("DOMContentLoaded", () => {
+        // Set initial theme based on system preference
+        const prefersLight =
+          window.matchMedia &&
+          window.matchMedia("(prefers-color-scheme: light)").matches;
+        const btn = document.getElementById("theme-toggle");
+
+        if (prefersLight) {
+          document.body.classList.add("light-mode");
+          if (btn) btn.textContent = "☾ Dark";
+        } else {
+          if (btn) btn.textContent = "☀ Light";
+        }
+
         renderNav();
         // Check if ForceGraph is loaded, if not retry after short delay
         if (typeof ForceGraph !== "undefined") {
@@ -411,6 +499,22 @@
           }, 500);
         }
       });
+
+      // THEME TOGGLE LOGIC
+      function toggleTheme() {
+        document.body.classList.toggle("light-mode");
+        const btn = document.getElementById("theme-toggle");
+        const isLight = document.body.classList.contains("light-mode");
+
+        btn.textContent = isLight ? "☾ Dark" : "☀ Light";
+
+        // Force graph re-render to update text colors
+        if (Graph) {
+          // We trigger a data update to force a canvas redraw
+          const currentData = Graph.graphData();
+          Graph.graphData(currentData);
+        }
+      }
 
       // 4. NAVIGATION RENDERER
       function renderNav() {
@@ -438,11 +542,15 @@
         const h2 = document.getElementById("panel-title");
         const p = document.getElementById("panel-desc");
 
+        // Get current computed styles for accent blue if fallback needed
+        const style = getComputedStyle(document.body);
+        const accentColor = style.getPropertyValue("--accent-blue").trim();
+
         panel.classList.add("visible");
-        panel.style.borderLeftColor = color || "#89cff0";
+        panel.style.borderLeftColor = color || accentColor;
 
         lbl.textContent = type === "MAIN" ? "MAIN MODULE" : "PREREQUISITE";
-        lbl.style.color = color || "#89cff0";
+        lbl.style.color = color || accentColor;
 
         h2.textContent = title;
         p.textContent = desc;
@@ -450,6 +558,7 @@
 
       // 6. GRAPH ENGINE (CANVAS)
       function loadModuleGraph(moduleId) {
+        selectedNode = null; // Reset selection when changing modules
         const module = dsModules.find((m) => m.id === moduleId);
         if (!module) return;
 
@@ -474,7 +583,7 @@
             name: prereq.title,
             desc: prereq.description,
             group: "prereq",
-            color: "#ffffff",
+            color: "#888888", // Default placeholder, overwritten in renderer
             val: 10, // Child node size
           });
 
@@ -501,17 +610,25 @@
 
             // --- INTERACTION ---
             .onNodeClick((node) => {
+              selectedNode = node; // Set selected node
+
               Graph.centerAt(node.x, node.y, 1000);
               Graph.zoom(2, 1000);
+
+              const style = getComputedStyle(document.body);
+              const accentColor = style
+                .getPropertyValue("--accent-blue")
+                .trim();
 
               updatePanel(
                 node.name,
                 node.desc,
                 node.group === "main" ? "MAIN" : "PREREQ",
-                node.color === "#ffffff" ? "#89cff0" : node.color
+                node.group === "main" ? node.color : accentColor
               );
             })
             .onBackgroundClick(() => {
+              selectedNode = null; // Deselect on background click
               Graph.zoomToFit(1000);
             })
 
@@ -519,21 +636,48 @@
             .nodeCanvasObject((node, ctx, globalScale) => {
               const label = node.name;
               const fontSize = (node.group === "main" ? 14 : 12) / globalScale;
+              const isSelected = selectedNode && node.id === selectedNode.id;
 
-              // 1. Draw Outer Glow (Halo)
-              if (node.group === "main") {
+              // Check Theme
+              const isLightMode =
+                document.body.classList.contains("light-mode");
+
+              // 1. Draw Outer Glow (Halo) - Enhanced if selected
+              if (node.group === "main" || isSelected) {
                 ctx.beginPath();
-                ctx.arc(node.x, node.y, node.val * 1.2, 0, 2 * Math.PI, false);
-                ctx.fillStyle = "rgba(255,255,255,0.1)";
+                ctx.arc(
+                  node.x,
+                  node.y,
+                  node.val * (isSelected ? 1.5 : 1.2),
+                  0,
+                  2 * Math.PI,
+                  false
+                );
+                // Glow color depends on theme
+                ctx.fillStyle = isSelected
+                  ? "rgba(255, 215, 0, 0.3)"
+                  : isLightMode
+                  ? "rgba(0,0,0,0.05)"
+                  : "rgba(255,255,255,0.1)";
                 ctx.fill();
               }
 
               // 2. Draw Node Circle
               ctx.beginPath();
               ctx.arc(node.x, node.y, node.val, 0, 2 * Math.PI, false);
-              ctx.fillStyle = node.color;
-              ctx.shadowBlur = 15;
-              ctx.shadowColor = node.color;
+
+              // Determine Node Color
+              // Prereq nodes: White in dark mode, Dark Grey in light mode (unless selected)
+              let nodeColor = node.color;
+              if (node.group !== "main") {
+                nodeColor = isLightMode ? "#666666" : "#ffffff";
+              }
+
+              // INTERACTIVE COLOR CHANGE: Gold if selected
+              ctx.fillStyle = isSelected ? "#ffd700" : nodeColor;
+
+              ctx.shadowBlur = isSelected ? 30 : 15;
+              ctx.shadowColor = isSelected ? "#ffd700" : nodeColor;
               ctx.fill();
 
               // Reset shadow for text
@@ -545,7 +689,10 @@
               } ${fontSize}px Sans-Serif`;
               ctx.textAlign = "center";
               ctx.textBaseline = "middle";
-              ctx.fillStyle = "#fff";
+
+              // TEXT COLOR: Needs to flip based on theme
+              ctx.fillStyle = isLightMode ? "#1a1a1a" : "#ffffff";
+
               // Draw text below the node
               ctx.fillText(label, node.x, node.y + node.val + 8);
             })
@@ -559,11 +706,39 @@
             })
 
             // --- LINKS ---
-            .linkColor(() => "rgba(137, 207, 240, 0.2)")
-            .linkWidth(2)
+            // INTERACTIVE LINK COLOR: Gold if connected to selected node
+            .linkColor((link) => {
+              if (
+                selectedNode &&
+                (link.source.id === selectedNode.id ||
+                  link.target.id === selectedNode.id)
+              ) {
+                return "#ff0055";
+              }
+              // Link color varies by theme
+              const isLightMode =
+                document.body.classList.contains("light-mode");
+              return isLightMode
+                ? "rgba(0, 102, 204, 0.2)"
+                : "rgba(137, 207, 240, 0.2)";
+            })
+            .linkWidth((link) => {
+              if (
+                selectedNode &&
+                (link.source.id === selectedNode.id ||
+                  link.target.id === selectedNode.id)
+              ) {
+                return 3; // Thicker if active
+              }
+              return 2;
+            })
             .linkDirectionalParticles(3) // Moving dots
             .linkDirectionalParticleWidth(3)
-            .linkDirectionalParticleColor(() => "#89cff0");
+            .linkDirectionalParticleColor(() => {
+              const isLightMode =
+                document.body.classList.contains("light-mode");
+              return isLightMode ? "#0066cc" : "#89cff0";
+            });
 
           // Apply forces if d3 is loaded
           if (chargeForce) Graph.d3Force("charge", chargeForce);
