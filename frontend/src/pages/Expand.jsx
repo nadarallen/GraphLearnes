@@ -20,7 +20,11 @@ export default function Expand() {
 
   // Sync URL with active module
   useEffect(() => {
-      setSearchParams({ module: activeModuleId });
+      setSearchParams(prev => {
+          const newParams = new URLSearchParams(prev);
+          newParams.set('module', activeModuleId);
+          return newParams;
+      });
   }, [activeModuleId]);
 
   // Transform Data based on View Mode
@@ -60,6 +64,9 @@ export default function Expand() {
                             type: 'concept',
                             group: 'prereq',
                             desc: p.description,
+                            detail: p.detail,
+                            why: p.why,
+                            references: p.references,
                             color: theme === 'dark' ? '#ffffff' : '#666666'
                         });
                         links.push({ source: p.id, target: m.id });
@@ -122,16 +129,35 @@ export default function Expand() {
   }, [graphData]);
 
 
+  // Highlight weak nodes logic
+  const [highlightedNodeIds, setHighlightedNodeIds] = useState([]);
+  
+  useEffect(() => {
+      const viewParam = searchParams.get('view');
+      const weakParam = searchParams.get('weak');
+      
+      if (viewParam === 'galaxy') {
+          setViewMode('galaxy');
+      }
+      
+      if (weakParam) {
+          const ids = weakParam.split(',');
+          setHighlightedNodeIds(ids);
+          // Auto-zoom to fit after a delay to ensure nodes are stable
+          setTimeout(() => {
+             if (fgRef.current) fgRef.current.zoomToFit(1000, 50);
+          }, 1000);
+      } else {
+        setHighlightedNodeIds([]);
+      }
+  }, [searchParams]);
+
+
   const handleNodeClick = (node) => {
     setSelectedNode(node);
-    // Shift graph to the left to make room for the panel
-    // We want the node to be at roughly 25% of the screen width (left side)
     const currentZoom = fgRef.current.zoom();
     const shift = (window.innerWidth / 4) / currentZoom; 
-    
-    // We shift the visual center to the RIGHT, so the node moves LEFT relative to viewport
     fgRef.current.centerAt(node.x + shift, node.y, 1000);
-    // Removed zoom() call to preserve user's zoom level
   };
 
   const handleBackgroundClick = () => {
@@ -146,7 +172,7 @@ export default function Expand() {
     <div className="h-screen flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950 font-sans transition-colors duration-300">
       
       {/* Custom Header similar to original */}
-      <header className="h-16 flex items-center justify-between px-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 z-20 transition-all duration-300">
+      <header className="h-32 w-full flex items-center justify-between px-12 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 z-20 transition-all duration-300">
           <div className="flex items-center gap-4">
               <button onClick={() => navigate('/dashboard')} className="px-4 py-1.5 rounded-full border border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white transition-all text-sm flex items-center gap-2">
                   <ArrowLeft className="w-4 h-4" /> Back
@@ -172,6 +198,15 @@ export default function Expand() {
               </button>
           </div>
       </header>
+
+      {/* Weak Areas Notification */}
+      {highlightedNodeIds.length > 0 && (
+          <div className="absolute top-36 left-1/2 transform -translate-x-1/2 z-30 bg-red-500 text-white px-6 py-3 rounded-full shadow-xl flex items-center gap-3 animate-fade-in-down">
+              <AlertCircle className="w-5 h-5" />
+              <span className="font-bold">Focus Area Detected:</span>
+              <span className="text-sm opacity-90">We found {highlightedNodeIds.length} topics that need more attention.</span>
+          </div>
+      )}
 
       {/* Navigation Bar (Original Style) - Only visible in Focused Mode */}
       {viewMode === 'focused' && (
@@ -203,15 +238,19 @@ export default function Expand() {
               const label = node.name;
               const fontSize = (node.group === "main" ? 14 : 12) / globalScale;
               const isSelected = selectedNode && node.id === selectedNode.id;
+              const isHighlighted = highlightedNodeIds.includes(node.id);
               const isLight = theme === 'light';
     
-              // 1. Draw Outer Glow (Halo) - Enhanced if selected
-              if (node.group === "main" || isSelected) {
+              // 1. Draw Outer Glow (Halo)
+              if (node.group === "main" || isSelected || isHighlighted) {
                 ctx.beginPath();
-                ctx.arc(node.x, node.y, node.val * (isSelected ? 1.5 : 1.2), 0, 2 * Math.PI, false);
-                ctx.fillStyle = isSelected 
-                  ? "rgba(255, 215, 0, 0.3)" 
-                  : isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.1)";
+                ctx.arc(node.x, node.y, node.val * (isSelected ? 1.5 : (isHighlighted ? 1.8 : 1.2)), 0, 2 * Math.PI, false);
+                
+                let haloColor = isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.1)";
+                if (isSelected) haloColor = "rgba(255, 215, 0, 0.3)";
+                if (isHighlighted) haloColor = "rgba(239, 68, 68, 0.4)"; // Red glow for weak nodes
+
+                ctx.fillStyle = haloColor;
                 ctx.fill();
               }
     
@@ -223,10 +262,12 @@ export default function Expand() {
               if (!nodeColor || node.group !== 'main') {
                  nodeColor = isLight ? "#666666" : "#ffffff";
               }
-              ctx.fillStyle = isSelected ? "#ffd700" : nodeColor;
+              if (isHighlighted) nodeColor = "#ef4444"; // Red for weak nodes
+              if (isSelected) nodeColor = "#ffd700";
               
-              ctx.shadowBlur = isSelected ? 30 : 15;
-              ctx.shadowColor = isSelected ? "#ffd700" : nodeColor;
+              ctx.fillStyle = nodeColor;
+              ctx.shadowBlur = (isSelected || isHighlighted) ? 30 : 15;
+              ctx.shadowColor = (isSelected || isHighlighted) ? nodeColor : nodeColor;
               ctx.fill();
               ctx.shadowBlur = 0; // Reset
     
@@ -235,6 +276,12 @@ export default function Expand() {
               ctx.textAlign = "center";
               ctx.textBaseline = "middle";
               ctx.fillStyle = isLight ? "#1a1a1a" : "#ffffff";
+              
+              if (isHighlighted) {
+                   ctx.fillStyle = "#ef4444"; // Red text for weak nodes
+                   ctx.font = `bold ${fontSize * 1.2}px Sans-Serif`; // Larger text
+              }
+              
               ctx.fillText(label, node.x, node.y + node.val + 8);
             }}
             
@@ -248,7 +295,8 @@ export default function Expand() {
             // --- LINK RENDERING ---
             linkColor={link => {
                 if (selectedNode && (link.source.id === selectedNode.id || link.target.id === selectedNode.id)) {
-                    return "#ff0055";
+                    // Use the color of the connected node
+                    return selectedNode.color || "#ff0055";
                 }
                 return theme === 'light' ? "rgba(0, 102, 204, 0.2)" : "rgba(137, 207, 240, 0.2)";
             }}
@@ -265,6 +313,7 @@ export default function Expand() {
             d3VelocityDecay={0.3}
           />
 
+
          {/* Info Panel - Sliding from right */}
          <div 
             className={`absolute right-4 top-4 w-80 glass-panel p-6 rounded-xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-l-[3px] shadow-2xl transition-all duration-300 transform ${
@@ -280,9 +329,34 @@ export default function Expand() {
                     <h2 className="text-xl font-bold mb-3 text-slate-800 dark:text-slate-100">
                         {selectedNode.name}
                     </h2>
-                    <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-6">
-                        {selectedNode.desc || "No description available."}
+                    <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
+                        {selectedNode.detail || selectedNode.desc || "No description available."}
                     </p>
+
+                    {selectedNode.why && (
+                        <div className="mb-4">
+                            <h5 className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">
+                                Why it's Required
+                            </h5>
+                            <p className="text-xs text-slate-600 dark:text-slate-300 italic border-l-2 border-slate-300 dark:border-slate-700 pl-3">
+                                {selectedNode.why}
+                            </p>
+                        </div>
+                    )}
+
+                    {selectedNode.references && (
+                         <div className="mb-6">
+                            <h5 className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">
+                                References
+                            </h5>
+                            <ul className="text-xs text-blue-600 dark:text-blue-400 space-y-1 list-disc list-inside">
+                                {Array.isArray(selectedNode.references) 
+                                    ? selectedNode.references.map((ref, idx) => <li key={idx}>{ref}</li>)
+                                    : <li>{selectedNode.references}</li>
+                                }
+                            </ul>
+                         </div>
+                    )}
 
                     <div className="flex gap-2">
                         {selectedNode.group === 'main' && (

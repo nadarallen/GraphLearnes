@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { Home, Share2, ClipboardCheck, CheckCircle2, XCircle, ArrowLeft } from 'lucide-react'; // Added icons
+import { Home, Share2, ClipboardCheck, CheckCircle2, XCircle, ArrowLeft, Network } from 'lucide-react'; // Added icons
 import Background3D from '../components/background/Background3D';
 
 export default function Result() {
@@ -189,13 +189,23 @@ export default function Result() {
                     </div>
 
                     {/* Footer Actions */}
-                    <div className="mt-10 flex justify-center gap-4">
+                    <div className="mt-10 flex flex-col md:flex-row justify-center gap-4">
                         <Link 
                             to="/dashboard" 
-                            className="px-8 py-3 bg-slate-800 dark:bg-blue-600 text-white rounded-xl font-medium hover:bg-slate-900 dark:hover:bg-blue-700 transition-all shadow-lg shadow-slate-800/20 dark:shadow-blue-900/20 flex items-center gap-2"
+                            className="px-8 py-3 bg-slate-800 dark:bg-slate-700 text-white rounded-xl font-medium hover:bg-slate-900 dark:hover:bg-slate-600 transition-all shadow-lg shadow-slate-800/20 dark:shadow-slate-900/20 flex items-center justify-center gap-2"
                         >
                             <ArrowLeft className="w-4 h-4" /> Return to Dashboard
                         </Link>
+
+                        {/* Indepth Analysis Button */}
+                        {location.state?.weakTopicIds?.length > 0 && (
+                            <button 
+                                onClick={() => navigate(`/expand?view=galaxy&weak=${location.state.weakTopicIds.join(',')}`)}
+                                className="px-8 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 animate-bounce-subtle"
+                            >
+                                <Network className="w-5 h-5" /> Get Indepth Analysis
+                            </button>
+                        )}
                     </div>
 
                 </div>

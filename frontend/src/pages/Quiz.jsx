@@ -8,8 +8,8 @@ export default function Quiz() {
     const topic = searchParams.get('topic') || "Programming Concepts";
 
     // Adaptive Quiz Constants
-    const CORRECT_STREAK_TO_INCREASE = 2;
-    const INCORRECT_STREAK_TO_DECREASE = 2;
+    const CORRECT_STREAK_TO_INCREASE = 3;
+    const INCORRECT_STREAK_TO_DECREASE = 1;
     const MAX_QUESTIONS_TO_ASK = 20;
 
     // State
@@ -139,7 +139,19 @@ export default function Quiz() {
         
         if (!nextQ) {
             const askedIds = questionHistory;
-            nextQ = questionPool.find(q => !askedIds.includes(q.id) && q.btl_level === currentBtlLevel.current);
+            const candidates = questionPool.filter(q => !askedIds.includes(q.id) && q.btl_level === currentBtlLevel.current);
+            // Prioritize coding questions explicitly
+            const codeQuestion = candidates.find(q => q.type === 'code');
+            if (codeQuestion) {
+                 nextQ = codeQuestion;
+            } else {
+                candidates.sort((a, b) => {
+                    if (a.type === 'code' && b.type !== 'code') return -1;
+                    if (a.type !== 'code' && b.type === 'code') return 1;
+                    return 0;
+                });
+                nextQ = candidates[0];
+            }
         }
         if (!nextQ) {
             // Fallback to any unasked
@@ -157,6 +169,84 @@ export default function Quiz() {
             const current = newMap.get(currentQuestionId);
             current.answer = val;
             current.state = (current.state === 'marked' || current.state === 'marked-answered') ? 'marked-answered' : 'answered';
+            newMap.set(currentQuestionId, current);
+            return newMap;
+        });
+
+    };
+
+    // Handler: Code Change
+    const handleCodeChange = (val) => {
+        setResultsMap(prev => {
+            const newMap = new Map(prev);
+            const current = newMap.get(currentQuestionId);
+            current.answer = val;
+            current.state = (current.state === 'marked' || current.state === 'marked-answered') ? 'marked-answered' : 'answered';
+            // Reset passed status on edit
+            current.passed = false; 
+            newMap.set(currentQuestionId, current);
+            return newMap;
+        });
+    };
+
+    // Handler: Run Code
+    const handleRunCode = async () => {
+        const currentQ = questionPool.find(q => q.id === currentQuestionId);
+        const currentRes = resultsMap.get(currentQuestionId);
+        
+        if (!currentRes?.answer) {
+            alert("Please write some code first!");
+            return;
+        }
+
+        setResultsMap(prev => {
+             const newMap = new Map(prev);
+             const current = newMap.get(currentQuestionId);
+             current.feedback = []; // Reset feedback
+             current.isRunning = true;
+             newMap.set(currentQuestionId, current);
+             return newMap;
+        });
+
+        const testCases = currentQ.testCases;
+        let allPassed = true;
+        const newFeedback = [];
+
+        for (const tc of testCases) {
+            try {
+                const response = await fetch('/api/compile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: currentRes.answer, input: tc.input })
+                });
+                const data = await response.json();
+                
+                if (data.error) {
+                    newFeedback.push({ input: tc.input, actual: data.output, expected: tc.expected, status: 'Error' });
+                    allPassed = false;
+                } else {
+                    const actualTrimmed = data.output.trim();
+                    const expectedTrimmed = tc.expected.trim();
+                    if (actualTrimmed === expectedTrimmed) {
+                        newFeedback.push({ input: tc.input, actual: actualTrimmed, expected: expectedTrimmed, status: 'Passed' });
+                    } else {
+                        newFeedback.push({ input: tc.input, actual: actualTrimmed, expected: expectedTrimmed, status: 'Failed' });
+                        allPassed = false;
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                newFeedback.push({ input: tc.input, actual: "Network Error", expected: tc.expected, status: 'Error' });
+                allPassed = false;
+            }
+        }
+
+        setResultsMap(prev => {
+            const newMap = new Map(prev);
+            const current = newMap.get(currentQuestionId);
+            current.feedback = newFeedback;
+            current.passed = allPassed;
+            current.isRunning = false;
             newMap.set(currentQuestionId, current);
             return newMap;
         });
@@ -234,6 +324,8 @@ export default function Quiz() {
         }
 
         let score = 0;
+        const topicStats = {}; // { topicId: { total: 0, incorrect: 0 } }
+
         const results = questionHistory.map((qId, idx) => {
             const q = questionPool.find(i => i.id === qId);
             const res = resultsMap.get(qId);
@@ -242,9 +334,26 @@ export default function Quiz() {
             if (userAns === q.correct) {
                 score++;
                 status = 'Correct';
+            } else if (q.type === 'code') {
+                if (res.passed) {
+                    score++;
+                    status = 'Correct';
+                } else {
+                     status = 'Wrong';
+                }
             } else if (userAns !== null) {
                 status = 'Wrong';
             }
+
+            // Track Stats
+            if (q.topicId) {
+                if (!topicStats[q.topicId]) topicStats[q.topicId] = { total: 0, incorrect: 0 };
+                topicStats[q.topicId].total++;
+                if (status !== 'Correct') {
+                    topicStats[q.topicId].incorrect++;
+                }
+            }
+
             return {
                 qNo: idx + 1,
                 question: q.text.replace(/<code-block>([\s\S]*?)<\/code-block>/g, " [CODE BLOCK] ").trim(),
@@ -254,8 +363,11 @@ export default function Quiz() {
             };
         });
 
+        // Identify weak topics (Any topic with > 0 incorrect answers for now)
+        const weakTopicIds = Object.keys(topicStats).filter(tid => topicStats[tid].incorrect > 0);
+
         alert(`Your Final Score: ${score}/${MAX_QUESTIONS_TO_ASK}`);
-        navigate('/result', { state: { total: MAX_QUESTIONS_TO_ASK, results } });
+        navigate('/result', { state: { total: MAX_QUESTIONS_TO_ASK, results, weakTopicIds } });
     };
 
     // Render Setup
@@ -317,23 +429,63 @@ export default function Quiz() {
                             <div id="q-text-wrapper">
                                 {renderQuestionText(currentQ.text)}
                             </div>
-                            <div className="options mt-6">
-                                {currentQ.options.map((opt, i) => (
-                                    <div key={i} className="option">
-                                        <input 
-                                            type="radio" 
-                                            id={`opt${i}`} 
-                                            name="answer" 
-                                            value={opt}
-                                            checked={currentResult.answer === opt}
-                                            onChange={() => handleOptionChange(opt)} 
-                                        />
-                                        <label htmlFor={`opt${i}`}>
-                                            {String.fromCharCode(65 + i)}. {opt}
-                                        </label>
+
+                            
+                            {currentQ.type === 'code' ? (
+                                <div className="code-section mt-6">
+                                    <textarea
+                                        className="w-full h-48 bg-gray-900 text-green-400 font-mono p-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        value={currentResult.answer || currentQ.starterCode} // Use starter code if no answer
+                                        onChange={(e) => handleCodeChange(e.target.value)}
+                                        spellCheck="false"
+                                    ></textarea>
+                                    <div className="mt-4 flex gap-4">
+                                        <button 
+                                            className={`px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold ${currentResult.isRunning ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            onClick={handleRunCode}
+                                            disabled={currentResult.isRunning}
+                                        >
+                                            {currentResult.isRunning ? 'Running...' : 'Run Code'}
+                                        </button>
                                     </div>
-                                ))}
-                            </div>
+                                    {currentResult.feedback && (
+                                        <div className="mt-4 space-y-2">
+                                            {currentResult.feedback.map((fb, idx) => (
+                                                <div key={idx} className={`p-3 rounded text-sm ${fb.status === 'Passed' ? 'bg-green-900/50 border border-green-500' : 'bg-red-900/50 border border-red-500'}`}>
+                                                    <div className="font-bold flex justify-between">
+                                                        <span>Test Case {idx + 1}: {fb.status}</span>
+                                                    </div>
+                                                    {fb.status !== 'Passed' && (
+                                                        <div className="mt-1 text-gray-300">
+                                                            <div>Input: {fb.input}</div>
+                                                            <div>Expected: {fb.expected}</div>
+                                                            <div>Actual: {fb.actual}</div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="options mt-6">
+                                    {currentQ.options.map((opt, i) => (
+                                        <div key={i} className="option">
+                                            <input 
+                                                type="radio" 
+                                                id={`opt${i}`} 
+                                                name="answer" 
+                                                value={opt}
+                                                checked={currentResult.answer === opt}
+                                                onChange={() => handleOptionChange(opt)} 
+                                            />
+                                            <label htmlFor={`opt${i}`}>
+                                                {String.fromCharCode(65 + i)}. {opt}
+                                            </label>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                         <div className="question-nav">
                             <button className="nav-btn mark-review" onClick={handleMarkReview}>Mark for Review & Next</button>

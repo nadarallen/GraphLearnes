@@ -11,6 +11,7 @@ export const questionPool = [
       ],
       correct: 'printf("Hello World");',
       btl_level: 1,
+      topicId: 'p1', // Basic Programming
     },
     {
       id: 2,
@@ -18,6 +19,7 @@ export const questionPool = [
       options: ["public", "private", "protected", "friendly"],
       correct: "friendly",
       btl_level: 1,
+      topicId: 'p1', // Basic Programming (Access specifiers are syntax/structure)
     },
     {
       id: 3,
@@ -25,6 +27,7 @@ export const questionPool = [
       options: ["void", "int", "float", "char"],
       correct: "int",
       btl_level: 1,
+      topicId: 'p5', // Functions (Main function)
     },
     {
       id: 4,
@@ -32,6 +35,7 @@ export const questionPool = [
       options: ["/* */", "//", "#", "<!-- -->"],
       correct: "//",
       btl_level: 1,
+      topicId: 'p1', // Basic Programming
     },
     {
       id: 5,
@@ -44,6 +48,7 @@ export const questionPool = [
       ],
       correct: "Java is platform-independent",
       btl_level: 1,
+      topicId: 'p1', // Basic Programming
     },
     {
       id: 6,
@@ -51,6 +56,7 @@ export const questionPool = [
       options: ["let", "var", "int", "define"],
       correct: "int",
       btl_level: 1,
+      topicId: 'p2', // Data Types
     },
     {
       id: 7,
@@ -58,6 +64,7 @@ export const questionPool = [
       options: ["number", "float", "decimal", "real"],
       correct: "float",
       btl_level: 1,
+      topicId: 'p2', // Data Types
     },
     {
       id: 8,
@@ -65,6 +72,7 @@ export const questionPool = [
       options: ["1 byte", "2 bytes", "4 bytes", "8 bytes"],
       correct: "4 bytes",
       btl_level: 1,
+      topicId: 'p2', // Data Types
     },
     {
       id: 9,
@@ -72,6 +80,7 @@ export const questionPool = [
       options: ["int", "char", "double", "boolean"],
       correct: "double",
       btl_level: 1,
+      topicId: 'p2', // Data Types
     },
     {
       id: 10,
@@ -79,6 +88,7 @@ export const questionPool = [
       options: ["int", "char", "string", "float"],
       correct: "char",
       btl_level: 1,
+      topicId: 'p2', // Data Types
     },
     {
       id: 11,
@@ -86,6 +96,7 @@ export const questionPool = [
       options: ["0", "Garbage", "1", "Undefined"],
       correct: "0",
       btl_level: 1,
+      topicId: 'p2', // Data Types (static vars)
     },
     {
       id: 12,
@@ -93,6 +104,7 @@ export const questionPool = [
       options: ["1", "true", '"true"', "yes"],
       correct: "true",
       btl_level: 1,
+      topicId: 'p2', // Data Types
     },
     {
       id: 13,
@@ -100,6 +112,7 @@ export const questionPool = [
       options: ["int", "long", "short", "byte"],
       correct: "long",
       btl_level: 1,
+      topicId: 'p2', // Data Types
     },
     {
       id: 14,
@@ -107,6 +120,7 @@ export const questionPool = [
       options: ["0", "1", "-1", "Depends on compiler"],
       correct: "0",
       btl_level: 1,
+      topicId: 'p3', // Arrays
     },
     {
       id: 15,
@@ -114,6 +128,7 @@ export const questionPool = [
       options: ["9", "10", "11", "Undefined"],
       correct: "10",
       btl_level: 1,
+      topicId: 'p3', // Arrays
     },
     {
       id: 16,
@@ -121,6 +136,7 @@ export const questionPool = [
       options: ["Primitive types", "Objects", "Functions", "Loops"],
       correct: "Objects",
       btl_level: 1,
+      topicId: 'p3', // Arrays
     },
     {
       id: 17,
@@ -133,6 +149,7 @@ export const questionPool = [
       ],
       correct: "int arr[5];",
       btl_level: 1,
+      topicId: 'p3', // Arrays
     },
     {
       id: 18,
@@ -140,6 +157,7 @@ export const questionPool = [
       options: ["arr[2]", "arr[3]", "arr(3)", "arr.3"],
       correct: "arr[2]",
       btl_level: 1,
+      topicId: 'p3', // Arrays
     },
     {
       id: 19,
@@ -152,6 +170,7 @@ export const questionPool = [
       ],
       correct: "Storing different data types",
       btl_level: 1,
+      topicId: 'p3', // Arrays
     },
     {
       id: 20,
@@ -164,6 +183,7 @@ export const questionPool = [
       ],
       correct: "int arr[3][4];",
       btl_level: 1,
+      topicId: 'p18', // Matrices (Multidimensional Arrays are matrices)
     },
     {
       id: 21,
@@ -176,6 +196,7 @@ export const questionPool = [
       ],
       correct: "do-while loop",
       btl_level: 1,
+      topicId: 'p4', // Loops
     },
     {
       id: 22,
@@ -183,6 +204,7 @@ export const questionPool = [
       options: ["skip;", "continue;", "break;", "pass;"],
       correct: "continue;",
       btl_level: 1,
+      topicId: 'p4', // Loops
     },
     {
       id: 23,
@@ -190,6 +212,7 @@ export const questionPool = [
       options: ["stop;", "end;", "break;", "exit;"],
       correct: "break;",
       btl_level: 1,
+      topicId: 'p4', // Loops
     },
     {
       id: 24,
@@ -197,6 +220,7 @@ export const questionPool = [
       options: ["0 1 2", "1 2 3", "0 1 2 3", "1 2"],
       correct: "0 1 2",
       btl_level: 1,
+      topicId: 'p4', // Loops
     },
     {
       id: 25,
@@ -209,6 +233,7 @@ export const questionPool = [
       ],
       correct: "Condition",
       btl_level: 1,
+      topicId: 'p4', // Loops
     },
     {
       id: 26,
@@ -216,6 +241,7 @@ export const questionPool = [
       options: ["break", "end", "return", "stop"],
       correct: "return",
       btl_level: 1,
+      topicId: 'p5', // Functions
     },
     {
       id: 27,
@@ -228,6 +254,7 @@ export const questionPool = [
       ],
       correct: "int sum(int a, int b){ return a+b; }",
       btl_level: 1,
+      topicId: 'p5', // Functions
     },
     {
       id: 28,
@@ -240,6 +267,7 @@ export const questionPool = [
       ],
       correct: "Any data type",
       btl_level: 1,
+      topicId: 'p5', // Functions
     },
     {
       id: 29,
@@ -247,6 +275,7 @@ export const questionPool = [
       options: ["exit", "return", "break", "yield"],
       correct: "return",
       btl_level: 1,
+      topicId: 'p5', // Functions
     },
     {
       id: 30,
@@ -259,6 +288,7 @@ export const questionPool = [
       ],
       correct: "Any loop",
       btl_level: 1,
+      topicId: 'p4', // Loops
     },
     {
       id: 31,
@@ -266,6 +296,7 @@ export const questionPool = [
       options: ["break;", "continue;", "return;", "skip;"],
       correct: "continue;",
       btl_level: 1,
+      topicId: 'p4', // Loops
     },
     {
       id: 32,
@@ -273,6 +304,7 @@ export const questionPool = [
       options: ["1 to 10", "0 to 9", "-1 to 9", "0 to 10"],
       correct: "0 to 9",
       btl_level: 1,
+      topicId: 'p3', // Arrays
     },
     // New Code Questions (BTL 1)
     {
@@ -281,6 +313,7 @@ export const questionPool = [
       options: ["1", "2", "3", "Error"],
       correct: "2",
       btl_level: 1,
+      topicId: 'p3', // Arrays
     },
     {
       id: 52,
@@ -288,6 +321,7 @@ export const questionPool = [
       options: ["main", "Hello", "printHello", "Error"],
       correct: "Hello",
       btl_level: 1,
+      topicId: 'p5', // Functions
     },
 
     // BTL Level 2: Understanding
@@ -302,6 +336,7 @@ export const questionPool = [
       ],
       correct: "To define the kind of data a variable can store",
       btl_level: 2,
+      topicId: 'p2', // Data Types
     },
     {
       id: 34,
@@ -314,6 +349,7 @@ export const questionPool = [
       ],
       correct: "Fractional part is truncated",
       btl_level: 2,
+      topicId: 'p2', // Data Types
     },
     {
       id: 35,
@@ -321,6 +357,7 @@ export const questionPool = [
       options: ["10", '"55"', "5", "Error"],
       correct: '"55"',
       btl_level: 2,
+      topicId: 'p2', // Data Types (String concatenation which is a type behavior)
     },
     {
       id: 36,
@@ -328,6 +365,7 @@ export const questionPool = [
       options: ["int", "char", "String", "float"],
       correct: "String",
       btl_level: 2,
+      topicId: 'p2', // Data Types
     },
     {
       id: 37,
@@ -341,6 +379,7 @@ export const questionPool = [
       correct:
         "A collection of variables of the same data type stored at contiguous memory locations",
       btl_level: 2,
+      topicId: 'p3', // Arrays
     },
     {
       id: 38,
@@ -353,6 +392,7 @@ export const questionPool = [
       ],
       correct: "Runtime error",
       btl_level: 2,
+      topicId: 'p3', // Arrays
     },
     {
       id: 39,
@@ -366,6 +406,7 @@ export const questionPool = [
       correct:
         "A for loop is useful when the number of iterations is known",
       btl_level: 2,
+      topicId: 'p4', // Loops
     },
     {
       id: 40,
@@ -373,6 +414,7 @@ export const questionPool = [
       options: ["for loop", "while loop", "do-while loop", "switch loop"],
       correct: "while loop",
       btl_level: 2,
+      topicId: 'p4', // Loops
     },
     {
       id: 41,
@@ -380,6 +422,7 @@ export const questionPool = [
       options: ["for(;;)", "while(true)", "Both A & B", "None"],
       correct: "Both A & B",
       btl_level: 2,
+      topicId: 'p4', // Loops
     },
     {
       id: 42,
@@ -392,6 +435,7 @@ export const questionPool = [
       ],
       correct: "To repeat the same code multiple times without rewriting",
       btl_level: 2,
+      topicId: 'p5', // Functions
     },
     {
       id: 43,
@@ -404,6 +448,7 @@ export const questionPool = [
       ],
       correct: "void func(int x)",
       btl_level: 2,
+      topicId: 'p5', // Functions
     },
     {
       id: 44,
@@ -411,6 +456,7 @@ export const questionPool = [
       options: ["4", "5", "6", "Error"],
       correct: "5",
       btl_level: 2,
+      topicId: 'p1', // Basic Programming (Operators)
     },
     {
       id: 45,
@@ -423,6 +469,7 @@ export const questionPool = [
       ],
       correct: "Infinite loop",
       btl_level: 2,
+      topicId: 'p4', // Loops
     },
     // New Code Question (BTL 2)
     {
@@ -431,6 +478,7 @@ export const questionPool = [
       options: ["2.5", "2", "2.0", "3"],
       correct: "2",
       btl_level: 2,
+      topicId: 'p1', // Basic Programming (Integer division)
     },
 
     // BTL Level 3: Applying
@@ -445,6 +493,7 @@ export const questionPool = [
       ],
       correct: "int arr[5] = {1,2,3,4,5};",
       btl_level: 3,
+      topicId: 'p3', // Arrays
     },
     {
       id: 47,
@@ -452,6 +501,7 @@ export const questionPool = [
       options: ["5", "6", "4", "Error"],
       correct: "6",
       btl_level: 3,
+      topicId: 'p1', // Basic Programming (Logic)
     },
     {
       id: 48,
@@ -459,6 +509,7 @@ export const questionPool = [
       options: ["012", "02", "12", "01"],
       correct: "02",
       btl_level: 3,
+      topicId: 'p4', // Loops
     },
     {
       id: 49,
@@ -466,6 +517,7 @@ export const questionPool = [
       options: ["4", "5", "8", "16"],
       correct: "8",
       btl_level: 3,
+      topicId: 'p4', // Loops
     },
     {
       id: 50,
@@ -473,6 +525,7 @@ export const questionPool = [
       options: ["6", "12", "3", "18"],
       correct: "12",
       btl_level: 3,
+      topicId: 'p5', // Functions (Recursion-ish/Composition)
     },
     // New Code Questions (BTL 3)
     {
@@ -481,6 +534,7 @@ export const questionPool = [
       options: ["10", "15", "5", "20"],
       correct: "15",
       btl_level: 3,
+      topicId: 'p1', // Basic Programming (Assignment)
     },
     {
       id: 55,
@@ -488,6 +542,7 @@ export const questionPool = [
       options: ["1 2 3", "1 4 9", "2 4 6", "1 8 27"],
       correct: "1 4 9",
       btl_level: 3,
+      topicId: 'p4', // Loops
     },
     {
       id: 56,
@@ -495,5 +550,52 @@ export const questionPool = [
       options: ["5", "10", "15", "20"],
       correct: "15",
       btl_level: 3,
+      topicId: 'p4', // Loops
     },
-  ];
+  // C Coding Questions (BTL 3)
+  {
+    id: 1001,
+    type: "code",
+    language: "c",
+    text: "Write a C program to calculate the sum of two integers. The input provides two integers separated by a space. Output their sum.",
+    starterCode:
+      '#include <stdio.h>\n\nint main() {\n    int a, b;\n    // Read input\n    scanf("%d %d", &a, &b);\n    \n    // Complete the logic\n    \n    return 0;\n}',
+    testCases: [
+      { input: "10 20", expected: "30" },
+      { input: "-5 15", expected: "10" },
+      { input: "100 200", expected: "300" },
+    ],
+    btl_level: 3,
+    topicId: 'p5', // Functions / Basic Prog
+  },
+  {
+    id: 1002,
+    type: "code",
+    language: "c",
+    text: "Write a C program to find the factorial of a given number N. Input is a single integer N.",
+    starterCode:
+      '#include <stdio.h>\n\nint main() {\n    int n;\n    scanf("%d", &n);\n    \n    // Write your factorial logic here\n    \n    return 0;\n}',
+    testCases: [
+      { input: "5", expected: "120" },
+      { input: "0", expected: "1" },
+      { input: "4", expected: "24" },
+    ],
+    btl_level: 3,
+    topicId: 'p4', // Loops/Recursion (Factorial usually implies loop/recursion)
+  },
+  {
+    id: 1003,
+    type: "code",
+    language: "c",
+    text: "Write a C program to print the sum of an array of N integers. First input is N, followed by N integers.",
+    starterCode:
+      '#include <stdio.h>\n\nint main() {\n    int n, i, sum = 0;\n    scanf("%d", &n);\n    int arr[n];\n    \n    // Read array and calculate sum\n    \n    printf("%d", sum);\n    return 0;\n}',
+    testCases: [
+      { input: "3 1 2 3", expected: "6" },
+      { input: "5 10 20 30 40 50", expected: "150" },
+      { input: "2 -5 5", expected: "0" },
+    ],
+    btl_level: 3,
+    topicId: 'p3', // Arrays
+  },
+];

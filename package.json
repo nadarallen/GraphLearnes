@@ -1,7 +1,16 @@
 {
+  "scripts": {
+    "start": "node server.js",
+    "server": "node server.js",
+    "client": "npm run dev --prefix frontend",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  },
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "mysql": "^2.18.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
   }
 }
