@@ -1,40 +1,57 @@
-# 🧠 GraphEDU: The Non-Linear Learning Platform
+# 🧠 GraphEDU: The AI-Powered Learning Simplifier
 >
-> *Connecting concepts the way your brain actually works.*
+> *Democratizing complex academic concepts through visualization and interaction.*
 
-<!-- HOSTING BADGES -->
-![Status](https://img.shields.io/badge/Status-Production-success?style=for-the-badge)
-![Tech](https://img.shields.io/badge/Stack-PERN-blue?style=for-the-badge)
-![Deployment](https://img.shields.io/badge/Deploy-Render-black?style=for-the-badge)
+<!-- TECHNOLOGIES -->
+<p align="center">
+  <img src="https://img.shields.io/badge/SDG-4_Quality_Education-C5192D?style=flat&logo=un&logoColor=white" />
+  <img src="https://img.shields.io/badge/SDG-10_Reduced_Inequalities-DD1367?style=flat&logo=un&logoColor=white" />
+  <br/>
+  <img src="https://img.shields.io/badge/React_19-20232A?style=flat&logo=react&logoColor=61DAFB" />
+  <img src="https://img.shields.io/badge/Vite-646CFF?style=flat&logo=vite&logoColor=white" />
+  <img src="https://img.shields.io/badge/Node.js-339933?style=flat&logo=nodedotjs&logoColor=white" />
+  <img src="https://img.shields.io/badge/PostgreSQL-316192?style=flat&logo=postgresql&logoColor=white" />
+  <img src="https://img.shields.io/badge/GSAP-88CE02?style=flat&logo=greensock&logoColor=white" />
+  <img src="https://img.shields.io/badge/Render-46E3B7?style=flat&logo=render&logoColor=white" />
+</p>
 
 ## 🚀 Live Demo
 
 **Production URL:** [ADD_YOUR_PRODUCTION_LINK_HERE]
 
----
+## 📺 Video Walkthrough
 
-## 📺 Project Walkthrough
-
-Check out our video explanation covering the inspiration, architecture, and live demo of GraphEDU.
-
-[![Watch the video](https://img.youtube.com/vi/INSERT_VIDEO_ID_HERE/maxresdefault.jpg)](https://www.youtube.com/watch?v=INSERT_VIDEO_ID_HERE)
-
-*(Click the image above to watch)*
+[![GraphEDU Demo](https://img.youtube.com/vi/YOUR_VIDEO_ID_HERE/maxresdefault.jpg)](https://www.youtube.com/watch?v=YOUR_VIDEO_ID_HERE)
+> *Click the thumbnail above to watch the full project explanation.*
 
 ---
 
-## 💡 The Problem
+## 🎯 The Problem Statement
 
-Traditional education follows a linear path: Chapter 1 → Chapter 2 → Chapter 3.
-**But learning isn't linear.** Concepts are interconnected web-like structures. Forgetting a prerequisite often halts progress completely, and traditional LMS platforms fail to visualize these dependencies.
+**"Many students struggle to understand academic content due to dense language, unstructured lecture notes, and information overload."**
 
-## 🛠️ The Solution
+This issue disproportionately affects:
 
-**GraphEDU** is an interactive learning platform that visualizes the "Knowledge Graph" of a curriculum.
+* **First-generation learners** who lack academic mentorship.
+* **Non-traditional students** overwhelmed by linear, text-heavy curricula.
+* **Educators** who lack the time to manually create varying levels of simplified content for every student.
 
-* **Visual Dependency Mapping**: See how "Linked Lists" connects to "Pointers" and "Memory Allocation".
-* **Adaptive Compiling**: Write and compile C code directly in the browser to test Data Structures concepts instantly.
-* **Smart Prerequisites**: The system warns you if you attempt a module without mastering its dependencies.
+There is a critical need for a tool that breaks down this "Wall of Text" into structured, digestible, and visual learning resources.
+
+## � The GraphEDU Solution
+
+GraphEDU addresses the **LearnEase** problem statement by transforming linear, dense academic material into an **Interactive Knowledge Graph**. Instead of just simplifying text, we simplify the *structure* of learning itself.
+
+### How we map to the Requirements
+
+* **Requirements**: *Visual aids (Concept maps) & Reduced Cognitive Load.*
+  * **Our Solution**: The **Galaxy View** (Force Graph) auto-generates a dynamic concept map, highlighting relationships between topics like "Pointers" and "Memory". This eliminates rote memorization and builds intuition.
+* **Requirement**: *Quick Knowledge Check.*
+  * **Our Solution**: Integrated **Adaptive Quizzes** provide immediate feedback (Corret/Incorrect) to validate understanding before moving to the next node.
+* **Requirement**: *Dual-View Learning Interface.*
+  * **Our Solution**: The **Split-Screen Compiler** allows students to read concepts on the left and immediately experiment with code on the right, bridging theory and practice in real-time.
+* **Requirement**: *Accessibility & Ease of Use.*
+  * **Our Solution**: A **Glassmorphism UI** optimized for focus, dark mode support for localized environments, and sub-5-second load times via Vite.
 
 ---
 
@@ -138,6 +155,20 @@ Securely compile and run C code on the server.
 
 * **Custom Auto-Seeding**
   * On every deployment, an `init_db.js` script checks the database health. If empty, it automatically builds the schema and seeds the initial curriculum, making the app "self-healing" and instantly demo-ready.
+
+---
+
+## 🗺️ Roadmap & Future Scope
+
+While GraphEDU currently focuses on the *structural visualization* of knowledge, our vision aligns fully with the **LearnEase** problem statement to become a comprehensive simplification platform.
+
+* **Phase 1 (Current)**: Interactive Knowledge Graph & Compiler Integration.
+* **Phase 2**: **AI Content Processing**
+  * Integrate LLMs to allow students to **upload PDFs** and auto-generate new graph nodes and relationships.
+* **Phase 3**: **Multi-Language Support**
+  * Translation of core concepts into regional languages (Hindi, Marathi, Tamil) to further address **SDG 10 (Reduced Inequalities)**.
+* **Phase 4**: **Offline Export**
+  * Allow students to download simplified concept maps and notes as PDFs for offline study.
 
 ---
 
