@@ -1,0 +1,26 @@
+services:
+  # 1. The Web Service (Your Node.js Backend + React Frontend)
+  - type: web
+    name: graphedu-app
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: graphedu-db
+          property: connectionString
+    # Map the parts of the connection string to your specific env vars
+    # Render provides a single connection string, so we need to parse it in code
+    # OR we can map specific properties if supported, but usually DB_HOST etc are needed.
+    # PRO TIP: It's better to update server.js to accept DATABASE_URL if present.
+
+databases:
+  # 2. The Database (Managed MySQL)
+  - name: graphedu-db
+    databaseName: datastructures_db
+    user: graphedu_user
+    plan: free # Note: Render Free tier DBs expire after 90 days

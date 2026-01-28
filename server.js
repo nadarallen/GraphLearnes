@@ -1,40 +1,84 @@
 // --- Configuration ---
+require("dotenv").config();
 const express = require("express");
 const mysql = require("mysql");
 const cors = require("cors");
 const { exec } = require("child_process");
 const fs = require("fs");
 const path = require("path");
+const os = require("os");
 const app = express();
-// *** CHANGE 1: Fix the Node.js server port to 3000 to avoid conflict ***
-const port = 3000; //balls
 
-// IMPORTANT: Replace these with your actual MySQL credentials
-const dbConfig = {
-  host: "localhost",
-  user: "root",
-  password: "Iloveballs@2014",
-  port: 5500, //balls
-  database: "datastructures_db",
+const port = process.env.PORT || 3000;
+
+// Database Configuration
+// NOTE: For Vercel, you receive a single DATABASE_URL or specific host/user/pass params from a cloud DB provider.
+// Database Configuration
+let dbConfig = {
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "Iloveballs@2014",
+  port: process.env.DB_PORT || 3306,
+  database: process.env.DB_NAME || "datastructures_db",
+  connectTimeout: 10000 
 };
+
+// Support "One-Click" Database strings (Render/Railway/Heroku)
+if (process.env.DATABASE_URL) {
+  try {
+    const dbUrl = new URL(process.env.DATABASE_URL);
+    dbConfig = {
+      host: dbUrl.hostname,
+      user: dbUrl.username,
+      password: dbUrl.password,
+      port: dbUrl.port,
+      database: dbUrl.pathname.substr(1),
+      connectTimeout: 10000
+    };
+  } catch (e) {
+    console.error("Failed to parse DATABASE_URL:", e);
+  }
+}
 
 // Create MySQL connection pool
 const pool = mysql.createPool(dbConfig);
 
+// Check DB Connection on start (Non-blocking)
+pool.getConnection((err, connection) => {
+  if (err) {
+    console.error("WARNING: Database connection failed:", err.message);
+    console.error(
+      "Ensure your database is running and configuration is correct.",
+    );
+  } else {
+    console.log("Database connected successfully.");
+    connection.release();
+  }
+});
+
+// Check for GCC availability
+exec("gcc --version", (err) => {
+  if (err) {
+    console.warn("WARNING: GCC not found. Compilation endpoint will not work.");
+  } else {
+    console.log("GCC detected. Compilation endpoint ready.");
+  }
+});
+
 // --- Middleware ---
-// Enable CORS to allow your HTML file (which runs on a different protocol/port) to access the API
 app.use(cors());
-app.use(express.json()); // Enable JSON body parsing
+app.use(express.json());
+
+//Serve Static Files (Frontend)
+app.use(express.static(path.join(__dirname, "frontend/dist")));
 
 // --- Data Transformation Helper ---
-// This function takes the flat SQL results and structures them into the nested JSON array
 function structureData(results) {
   const modulesMap = new Map();
 
   results.forEach((row) => {
     const moduleId = row.id;
 
-    // 1. Create or retrieve the main module object
     if (!modulesMap.has(moduleId)) {
       modulesMap.set(moduleId, {
         id: moduleId,
@@ -44,9 +88,7 @@ function structureData(results) {
       });
     }
 
-    // 2. Add the prerequisite to the module's prerequisites array
     if (row.prereq_id) {
-      // Only add if a prerequisite exists
       const module = modulesMap.get(moduleId);
       module.prerequisites.push({
         id: row.prereq_id,
@@ -57,10 +99,7 @@ function structureData(results) {
     }
   });
 
-  // 3. Convert Map values back to an array
   const finalModules = Array.from(modulesMap.values());
-
-  // Ensure prerequisites within each module are sorted by order
   finalModules.forEach((module) => {
     module.prerequisites.sort((a, b) => a.order - b.order);
   });
@@ -70,7 +109,6 @@ function structureData(results) {
 
 // --- API Endpoint ---
 app.get("/api/modules", (req, res) => {
-  // This is the SQL query from the previous step
   const sql = `
         SELECT
             m.module_id AS id,
@@ -91,13 +129,11 @@ app.get("/api/modules", (req, res) => {
   pool.query(sql, (err, results) => {
     if (err) {
       console.error("MySQL Query Error:", err);
-      return res.status(500).json({ error: "Database query failed." });
+      return res
+        .status(500)
+        .json({ error: "Database query failed or DB not connected." });
     }
-
-    // Transform the flat results into the nested structure the frontend expects
     const structuredData = structureData(results);
-
-    // Send the JSON response to the browser
     res.json(structuredData);
   });
 });
@@ -110,41 +146,41 @@ app.post("/api/compile", (req, res) => {
     return res.status(400).json({ error: "No code provided" });
   }
 
-  // Create a unique temporary file name
+  // USE SYSTEM GENERIC TEMP DIR (Required for Vercel/Serverless read-only filesystems)
   const timestamp = Date.now();
-  const filePath = path.join(__dirname, `temp_${timestamp}.c`);
-  const outPath = path.join(__dirname, `temp_${timestamp}.out`);
+  const tempDir = os.tmpdir();
+  const filePath = path.join(tempDir, `temp_${timestamp}.c`);
+  const outPath = path.join(tempDir, `temp_${timestamp}.out`);
 
-  // Write code to file
   fs.writeFile(filePath, code, (err) => {
     if (err) {
       console.error("File Write Error:", err);
       return res.status(500).json({ error: "Failed to write code to file" });
     }
 
-    // Compile the code
     exec(`gcc "${filePath}" -o "${outPath}"`, (compileErr, stdout, stderr) => {
       if (compileErr) {
-        // Cleanup source file
         fs.unlink(filePath, () => {});
-        return res.json({ output: stderr, error: true }); // Return compilation error as output
+        // If GCC command not found
+        if (stderr.includes('not found') || compileErr.message.includes('not found')) {
+            return res.json({ output: "Server Error: GCC compiler not available in this environment.", error: true });
+        }
+        return res.json({ output: stderr, error: true });
       }
 
-      // Execute the compiled binary
-      // Use printf to pipe input if provided
-      const runCommand = input ? `echo "${input}" | "${outPath}"` : `"${outPath}"`;
+      const runCommand = input
+        ? `echo "${input}" | "${outPath}"`
+        : `"${outPath}"`;
 
       exec(runCommand, { timeout: 2000 }, (runErr, runStdout, runStderr) => {
-        // Cleanup files
         fs.unlink(filePath, () => {});
         fs.unlink(outPath, () => {});
 
         if (runErr) {
-            // Handle timeout or runtime errors
-            if (runErr.killed) {
-                return res.json({ output: "Time Limit Exceeded", error: true });
-            }
-            return res.json({ output: runStderr || runErr.message, error: true });
+          if (runErr.killed) {
+            return res.json({ output: "Time Limit Exceeded", error: true });
+          }
+          return res.json({ output: runStderr || runErr.message, error: true });
         }
 
         res.json({ output: runStdout, error: false });
@@ -153,13 +189,31 @@ app.post("/api/compile", (req, res) => {
   });
 });
 
-// --- Start Server ---
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-  console.log(`Access API at: http://localhost:${port}/api/modules`);
+// --- Catch-All for Client-Side Routing ---
+// This must be the LAST route
+app.get("*", (req, res) => {
+  const indexPath = path.join(__dirname, "frontend/dist", "index.html");
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res
+      .status(404)
+      .send("Frontend not built. Run 'npm run build' in frontend directory.");
+  }
 });
 
-// Helper function to handle map key case sensitivity that can arise from SQL results
+// --- Start Server (Conditional) ---
+// Only listen if executed directly (node server.js).
+// Vercel imports this as a module, so we export the app instead.
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+    console.log(`Access API at: http://localhost:${port}/api/modules`);
+  });
+}
+
+module.exports = app;
+
 function normalizeKey(key) {
   return key.toLowerCase().replace(/_/g, "");
 }
