@@ -1,7 +1,7 @@
 // --- Configuration ---
-require("dotenv").config();
+require('dotenv').config();
 const express = require("express");
-const mysql = require("mysql");
+const { Pool } = require("pg"); // Switch to pg
 const cors = require("cors");
 const { exec } = require("child_process");
 const fs = require("fs");
@@ -16,43 +16,38 @@ const port = process.env.PORT || 3000;
 // Database Configuration
 let dbConfig = {
   host: process.env.DB_HOST || "localhost",
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "Iloveballs@2014",
-  port: process.env.DB_PORT || 3306,
+  user: process.env.DB_USER || "postgres", // Default PG user
+  password: process.env.DB_PASSWORD || "password",
+  port: process.env.DB_PORT || 5432, // Default PG port
   database: process.env.DB_NAME || "datastructures_db",
-  connectTimeout: 10000 
+  ssl: process.env.DB_SSL ? { rejectUnauthorized: false } : false
 };
 
 // Support "One-Click" Database strings (Render/Railway/Heroku)
 if (process.env.DATABASE_URL) {
-  try {
-    const dbUrl = new URL(process.env.DATABASE_URL);
     dbConfig = {
-      host: dbUrl.hostname,
-      user: dbUrl.username,
-      password: dbUrl.password,
-      port: dbUrl.port,
-      database: dbUrl.pathname.substr(1),
-      connectTimeout: 10000
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false }
     };
-  } catch (e) {
-    console.error("Failed to parse DATABASE_URL:", e);
-  }
 }
 
-// Create MySQL connection pool
-const pool = mysql.createPool(dbConfig);
+// Create PostgreSQL connection pool
+const pool = new Pool(dbConfig);
 
-// Check DB Connection on start (Non-blocking)
-pool.getConnection((err, connection) => {
+// Check DB Connection on start (Non-blocking) & Auto-Init
+pool.connect((err, client, release) => {
   if (err) {
     console.error("WARNING: Database connection failed:", err.message);
-    console.error(
-      "Ensure your database is running and configuration is correct.",
-    );
+    console.error("Ensure your database is running and configuration is correct.");
   } else {
     console.log("Database connected successfully.");
-    connection.release();
+    release();
+
+    // Auto-Initialize Database if needed
+    const initDB = require('./init_db');
+    initDB()
+      .then(() => console.log("Database initialization check complete."))
+      .catch(e => console.error("Database initialization failed:", e));
   }
 });
 
@@ -126,14 +121,15 @@ app.get("/api/modules", (req, res) => {
             m.module_id, p.prereq_order;
     `;
 
-  pool.query(sql, (err, results) => {
+  pool.query(sql, (err, result) => {
     if (err) {
-      console.error("MySQL Query Error:", err);
+      console.error("Postgres Query Error:", err);
       return res
         .status(500)
         .json({ error: "Database query failed or DB not connected." });
     }
-    const structuredData = structureData(results);
+    // Postgres returns rows in result.rows
+    const structuredData = structureData(result.rows);
     res.json(structuredData);
   });
 });
