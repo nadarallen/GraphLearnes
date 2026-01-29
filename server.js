@@ -187,7 +187,7 @@ app.post("/api/compile", (req, res) => {
 
 // --- Catch-All for Client-Side Routing ---
 // This must be the LAST route
-app.get("*", (req, res) => {
+app.get(/^(.*)$/, (req, res) => {
   const indexPath = path.join(__dirname, "frontend/dist", "index.html");
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
