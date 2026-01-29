@@ -21,7 +21,7 @@
 
 ## 📺 Video Walkthrough
 
-[![GraphEDU Demo](https://img.youtube.com/vi/418n3zMDfMM/maxresdefault.jpg)](https://youtu.be/418n3zMDfMM)
+[![GraphEDU Demo](https://img.youtube.com/vi/418n3zMDfMM/hqdefault.jpg)](https://youtu.be/418n3zMDfMM)
 > *Click the thumbnail above to watch the full project explanation.*
 
 ---
